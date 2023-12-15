@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from sqlalchemy import DateTime, ForeignKey, text, String
 
-from app.models.base import Base, TimestampMixin
+from app.models.base import Base, TimestampMixin, str_50, str_256
 from app.models.user import User
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -27,8 +27,9 @@ class TemplateFieldType(Base):
 
     __tablename__ = "field_type"
 
-    type: Mapped[str]  # = mapped_column(String, unique=True)
-    name: Mapped[str]
+    type: Mapped[str_50] = mapped_column(unique=True)
+    name: Mapped[str_50]
+    mask: Mapped[str_256] = mapped_column(nullable=True)
 
     def __str__(self):
         return f"{self.type} ({self.name})"

@@ -1,18 +1,32 @@
 from datetime import datetime
 from typing import Optional
+
 from fastapi import HTTPException
 from sqlalchemy import Sequence
-from app.database import async_session_maker
+from app.common.constants import Messages
+
+from app.common.exceptions import (
+    TypeFieldAlreadyExistsException,
+    TypeFieldNotFoundException,
+)
+from app.crud.template_dao import TemplateFieldTypeDAO
+from app.database import async_session_maker, idpk
+
+from app.models.template import (
+    Template,
+    TemplateField,
+    TemplateFieldGroup,
+    TemplateFieldType,
+)
+from app.schemas.template import (
+    TemplateFieldTypeAddDTO,
+    TemplateFieldTypeReadDTO,
+    TemplateRead,
+    TemplateReadMinified,
+)
+
 
 # mock for dao and db
-from app.models.template import (
-    TemplateFieldType,
-    TemplateFieldGroup,
-    TemplateField,
-    Template,
-)
-from app.schemas.template import TemplateRead, TemplateReadMinified
-
 groups = [
     TemplateFieldGroup(id=1, name="Группа 1.1", template_id=1),
     TemplateFieldGroup(id=2, name="Группа 1.2", template_id=1),
@@ -121,6 +135,75 @@ templates_mock = [
         updated_at=datetime.utcnow(),
     ),
 ]
+
+
+class TemplateFieldTypeService:
+    @classmethod
+    async def get(cls, *, id: idpk) -> Optional[TemplateFieldTypeReadDTO]:
+        obj = await TemplateFieldTypeDAO.get_by_id(id)
+        if not obj:
+            raise TypeFieldNotFoundException()
+        return obj
+
+    @classmethod
+    async def get_all(cls) -> list[TemplateFieldTypeReadDTO]:
+        obj_sequence = await TemplateFieldTypeDAO.get_all()
+        print("Services objects")
+        print(obj_sequence)
+        return obj_sequence
+
+    @classmethod
+    async def add(
+        cls, obj: TemplateFieldTypeAddDTO
+    ) -> Optional[TemplateFieldTypeReadDTO]:
+        obj_db = await TemplateFieldTypeDAO.get_one_or_none(type=obj.type)
+        if obj_db:
+            raise TypeFieldAlreadyExistsException(
+                detail=Messages.TYPE_FIELD_ALREADY_EXISTS.format(obj.type)
+            )
+        obj_db = await TemplateFieldTypeDAO.create(**obj.model_dump())
+        return obj_db
+
+    @classmethod
+    async def add_list(
+        cls, obj_list: list[TemplateFieldTypeAddDTO]
+    ) -> Optional[list[TemplateFieldTypeReadDTO]]:
+        obj_dict_list = []
+        for obj in obj_list:
+            obj_by_type = await TemplateFieldTypeDAO.get_one_or_none(
+                type=obj.type
+            )
+            if obj_by_type:
+                raise TypeFieldAlreadyExistsException(
+                    detail=Messages.TYPE_FIELD_ALREADY_EXISTS.format(obj.type)
+                )
+            obj_dict_list.append(obj.model_dump())
+        created_sequence = await TemplateFieldTypeDAO.create_list(
+            obj_dict_list
+        )
+        return created_sequence
+
+    @classmethod
+    async def update(
+        cls, id: idpk, obj: TemplateFieldTypeAddDTO
+    ) -> TemplateFieldTypeReadDTO:
+        obj_by_id = await TemplateFieldTypeDAO.get_by_id(id)
+        if not obj_by_id:
+            raise TypeFieldNotFoundException()
+        obj_by_type = await TemplateFieldTypeDAO.get_one_or_none(type=obj.type)
+        if obj_by_type and obj_by_type.id != id:
+            raise TypeFieldAlreadyExistsException(
+                detail=Messages.TYPE_FIELD_ALREADY_EXISTS.format(obj.type)
+            )
+        obj_by_id = await TemplateFieldTypeDAO.update_(id, **obj.model_dump())
+        return obj_by_id
+
+    @classmethod
+    async def delete(cls, id: idpk):
+        obj_db = await TemplateFieldTypeDAO.get_by_id(id)
+        if not obj_db:
+            raise TypeFieldNotFoundException()
+        await TemplateFieldTypeDAO.delete_(id)
 
 
 class TemplateService:

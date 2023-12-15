@@ -1,5 +1,6 @@
 from datetime import datetime
-from sqlalchemy import DateTime, func
+from typing import Annotated
+from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -8,9 +9,14 @@ from sqlalchemy.orm import (
 )
 
 
+str_50 = Annotated[str, 50]
+str_256 = Annotated[str, 256]
+
+
 class Base(DeclarativeBase):
     __abstract__ = True
 
+    type_annotation_map = {str_50: String(50), str_256: String(256)}
     id: Mapped[int] = mapped_column(primary_key=True)
 
     def to_dict(self):
