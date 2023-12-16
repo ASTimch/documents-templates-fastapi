@@ -9,7 +9,7 @@ from app.schemas.template import (
     TemplateRead,
     TemplateReadMinified,
 )
-from app.services.template import TemplateFieldTypeService, TemplateService
+from app.services.template import TemplateFieldTypeService
 
 router = APIRouter()
 

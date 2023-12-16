@@ -96,10 +96,10 @@ def event_loop(request):
 
 
 # Фикстура асинхронного клиента для каждого из тестов
-# @pytest.fixture(scope="function")
-# async def ac() -> AsyncIterator[AsyncClient]:
-#     async with AsyncClient(app=app, base_url="http://test") as ac:
-#         yield ac
+@pytest.fixture(scope="function")
+async def ac() -> AsyncIterator[AsyncClient]:
+    async with AsyncClient(app=app, base_url="http://test") as ac:
+        yield ac
 
 
 # Фикстура аутентифицированного клиента для каждого из тестов
