@@ -1,26 +1,6 @@
 import pytest
 from app.crud.template_dao import TemplateFieldTypeDAO
 
-
-# {
-#     "id": 1,
-#     "type": "str",
-#     "name": "Строка",
-#     "mask": "/^.*$/"
-# },
-# {
-#     "id": 2,
-#     "type": "int",
-#     "name": "Целочисленный",
-#     "mask": "/^\\d*$/"
-# },
-# {
-#     "id": 3,
-#     "type": "float",
-#     "name": "Вещественный",
-#     "mask": "/^\\d+(?:\\.|,)?\\d*$/"
-# }
-
 field_type_db = {
     1: ("str", "Строка", "/^.*$/"),
     2: ("int", "Целочисленный", "/^\\d*$/"),

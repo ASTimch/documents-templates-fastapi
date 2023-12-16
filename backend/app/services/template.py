@@ -140,34 +140,44 @@ templates_mock = [
 class TemplateFieldTypeService:
     @classmethod
     async def get(cls, *, id: idpk) -> Optional[TemplateFieldTypeReadDTO]:
+        """Получить объект по заданному id"""
+
         obj = await TemplateFieldTypeDAO.get_by_id(id)
         if not obj:
             raise TypeFieldNotFoundException()
-        return obj
+        return TemplateFieldTypeReadDTO.model_validate(obj)
 
     @classmethod
     async def get_all(cls) -> list[TemplateFieldTypeReadDTO]:
+        """Получить все объекты"""
+
         obj_sequence = await TemplateFieldTypeDAO.get_all()
-        print("Services objects")
-        print(obj_sequence)
-        return obj_sequence
+        obj_dto_list = [
+            TemplateFieldTypeReadDTO.model_validate(obj)
+            for obj in obj_sequence
+        ]
+        return obj_dto_list
 
     @classmethod
     async def add(
         cls, obj: TemplateFieldTypeAddDTO
     ) -> Optional[TemplateFieldTypeReadDTO]:
+        """Добавить новый объект"""
+
         obj_db = await TemplateFieldTypeDAO.get_one_or_none(type=obj.type)
         if obj_db:
             raise TypeFieldAlreadyExistsException(
                 detail=Messages.TYPE_FIELD_ALREADY_EXISTS.format(obj.type)
             )
         obj_db = await TemplateFieldTypeDAO.create(**obj.model_dump())
-        return obj_db
+        return TemplateFieldTypeReadDTO.model_validate(obj_db)
 
     @classmethod
     async def add_list(
         cls, obj_list: list[TemplateFieldTypeAddDTO]
     ) -> Optional[list[TemplateFieldTypeReadDTO]]:
+        """Добавить все объекты из списка obj_list"""
+
         obj_dict_list = []
         for obj in obj_list:
             obj_by_type = await TemplateFieldTypeDAO.get_one_or_none(
@@ -187,6 +197,8 @@ class TemplateFieldTypeService:
     async def update(
         cls, id: idpk, obj: TemplateFieldTypeAddDTO
     ) -> TemplateFieldTypeReadDTO:
+        """Обновить объект с заданным id"""
+
         obj_by_id = await TemplateFieldTypeDAO.get_by_id(id)
         if not obj_by_id:
             raise TypeFieldNotFoundException()
@@ -200,6 +212,8 @@ class TemplateFieldTypeService:
 
     @classmethod
     async def delete(cls, id: idpk):
+        """Удалить объект с заданным id"""
+
         obj_db = await TemplateFieldTypeDAO.get_by_id(id)
         if not obj_db:
             raise TypeFieldNotFoundException()
