@@ -9,18 +9,15 @@ from app.schemas.template import (
     TemplateFieldTypeWriteDTO,
 )
 from app.services.template_field_type import TemplateFieldTypeService
+from app.tests.fixtures import template_field_type_list
 
 template_field_type_mock = (
     "id, type, name, mask",
-    [
-        (1, "str", "Строка", "/^.*$/"),
-        (2, "int", "Целочисленный", "/^\\d*$/"),
-        (3, "float", "Вещественный", "/^\\d+(?:\\.|,)?\\d*$/"),
-    ],
+    template_field_type_list,
 )
 
 # Построение словаря исходных данных с ключом id
-template_field_type_dict = {x[0]: x[1:] for x in template_field_type_mock[1]}
+template_field_type_dict = {x[0]: x[1:] for x in template_field_type_list}
 
 # Построение словаря соответствий type:id
 template_field_type_id_mapping = {

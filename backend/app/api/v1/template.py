@@ -33,7 +33,7 @@ async def update_template(template_id: int):
     summary="Обновить docx шаблон",
     status_code=status.HTTP_200_OK,
 )
-async def upload_template(template_id: int, file: UploadFile):
+async def upload_docx_template(template_id: int, file: UploadFile):
     await TemplateService.update_docx_template(template_id, file)
 
 

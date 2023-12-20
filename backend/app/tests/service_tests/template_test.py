@@ -1,266 +1,18 @@
+from typing import Any
 import pytest
-from app.common.exceptions import TemplateNotFoundException
-from app.schemas.template import TemplateWriteDTO
+from app.common.exceptions import (
+    TemplateAlreadyDeletedException,
+    TemplateNotFoundException,
+    TypeFieldNotFoundException,
+)
+from app.schemas.template import TemplateReadDTO, TemplateWriteDTO
 from app.services.template import TemplateService
 from app.services.template_field_type import TemplateFieldTypeService
-
-templates_for_write = [
-    {
-        "title": "Шаблон 1",
-        "deleted": "False",
-        "description": "Описание шаблона 1",
-        "grouped_fields": [
-            {
-                "name": "Группа 1",
-                "fields": [
-                    {
-                        "tag": "Тэг1",
-                        "name": "Наименование 1",
-                        "hint": "Описание 1",
-                        "type": "str",
-                        "length": 100,
-                    },
-                    {
-                        "tag": "Тэг2",
-                        "name": "Наименование 2",
-                        "hint": "Описание 2",
-                        "type": "int",
-                        "length": 20,
-                    },
-                ],
-            },
-            {
-                "name": "Группа 2",
-                "fields": [
-                    {
-                        "tag": "Тэг3",
-                        "name": "Наименование 3",
-                        "hint": "Описание 3",
-                        "type": "str",
-                        "length": 40,
-                    },
-                    {
-                        "tag": "Тэг4",
-                        "name": "Наименование 4",
-                        "hint": "Описание 4",
-                        "type": "float",
-                        "length": 40,
-                    },
-                ],
-            },
-        ],
-        "ungrouped_fields": [
-            {
-                "tag": "Тэг5",
-                "name": "Наименование 5",
-                "hint": "Описание 5",
-                "type": "str",
-                "length": 100,
-            },
-            {
-                "tag": "Тэг6",
-                "name": "Наименование 6",
-                "hint": "Описание 6",
-                "type": "str",
-                "length": 100,
-            },
-        ],
-    },
-    {
-        "title": "Шаблон 2",
-        "deleted": "False",
-        "description": "Описание шаблона 2",
-        "grouped_fields": [
-            {
-                "name": "Группа 3",
-                "fields": [
-                    {
-                        "tag": "Тэг 7",
-                        "name": "Наименование 7",
-                        "hint": "Описание 7",
-                        "type": "str",
-                        "length": 100,
-                    },
-                    {
-                        "tag": "Тэг8",
-                        "name": "Наименование 8",
-                        "hint": "Описание 8",
-                        "type": "int",
-                        "length": 20,
-                    },
-                ],
-            },
-            {
-                "name": "Группа 4",
-                "fields": [
-                    {
-                        "tag": "Тэг9",
-                        "name": "Наименование 9",
-                        "hint": "Описание 9",
-                        "type": "str",
-                        "length": 40,
-                    },
-                    {
-                        "tag": "Тэг10",
-                        "name": "Наименование 10",
-                        "hint": "Описание 10",
-                        "type": "float",
-                        "length": 40,
-                    },
-                ],
-            },
-        ],
-        "ungrouped_fields": [
-            {
-                "tag": "Тэг11",
-                "name": "Наименование 11",
-                "hint": "Описание 11",
-                "type": "str",
-                "length": 100,
-            },
-            {
-                "tag": "Тэг12",
-                "name": "Наименование 12",
-                "hint": "Описание 12",
-                "type": "str",
-                "length": 100,
-            },
-        ],
-    },
-]
-
-templates_for_read = [
-    {
-        "title": "Шаблон 1",
-        "deleted": "False",
-        "description": "Описание шаблона 1",
-        "grouped_fields": [
-            {
-                "name": "Группа 1",
-                "fields": [
-                    {
-                        "tag": "Тэг1",
-                        "name": "Наименование 1",
-                        "hint": "Описание 1",
-                        "type": "str",
-                        "length": 100,
-                    },
-                    {
-                        "tag": "Тэг2",
-                        "name": "Наименование 2",
-                        "hint": "Описание 2",
-                        "type": "int",
-                        "length": 20,
-                    },
-                ],
-            },
-            {
-                "name": "Группа 2",
-                "fields": [
-                    {
-                        "tag": "Тэг3",
-                        "name": "Наименование 3",
-                        "hint": "Описание 3",
-                        "type": "str",
-                        "length": 40,
-                    },
-                    {
-                        "tag": "Тэг4",
-                        "name": "Наименование 4",
-                        "hint": "Описание 4",
-                        "type": "float",
-                        "length": 40,
-                    },
-                ],
-            },
-        ],
-        "ungrouped_fields": [
-            {
-                "tag": "Тэг5",
-                "name": "Наименование 5",
-                "hint": "Описание 5",
-                "type": "str",
-                "length": 100,
-            },
-            {
-                "tag": "Тэг6",
-                "name": "Наименование 6",
-                "hint": "Описание 6",
-                "type": "str",
-                "length": 100,
-            },
-        ],
-    },
-    {
-        "title": "Шаблон 2",
-        "deleted": "False",
-        "description": "Описание шаблона 2",
-        "grouped_fields": [
-            {
-                "name": "Группа 3",
-                "fields": [
-                    {
-                        "tag": "Тэг 7",
-                        "name": "Наименование 7",
-                        "hint": "Описание 7",
-                        "type": "str",
-                        "length": 100,
-                    },
-                    {
-                        "tag": "Тэг8",
-                        "name": "Наименование 8",
-                        "hint": "Описание 8",
-                        "type": "int",
-                        "length": 20,
-                    },
-                ],
-            },
-            {
-                "name": "Группа 4",
-                "fields": [
-                    {
-                        "tag": "Тэг9",
-                        "name": "Наименование 9",
-                        "hint": "Описание 9",
-                        "type": "str",
-                        "length": 40,
-                    },
-                    {
-                        "tag": "Тэг10",
-                        "name": "Наименование 10",
-                        "hint": "Описание 10",
-                        "type": "float",
-                        "length": 40,
-                    },
-                ],
-            },
-        ],
-        "ungrouped_fields": [
-            {
-                "tag": "Тэг11",
-                "name": "Наименование 11",
-                "hint": "Описание 11",
-                "type": "str",
-                "length": 100,
-            },
-            {
-                "tag": "Тэг12",
-                "name": "Наименование 12",
-                "hint": "Описание 12",
-                "type": "str",
-                "length": 100,
-            },
-        ],
-    },
-]
-
-# # Построение словаря исходных данных с ключом id
-# template_field_type_dict = {x[0]: x[1:] for x in template_field_type_mock[1]}
-
-# # Построение словаря соответвий type:id
-# template_field_type_id_mapping = {
-#     x[1]: x[0] for x in template_field_type_mock[1]
-# }
+from app.tests.fixtures import (
+    templates_for_write,
+    templates_for_read,
+    template_with_invalid_type_field,
+)
 
 
 class TestTemplateService:
@@ -274,21 +26,54 @@ class TestTemplateService:
     #     assert obj_dto.name == name
     #     assert obj_dto.mask == mask
 
+    def _compare_fields(self, field1, field2):
+        assert field1.tag == field2.tag, "tag полей не совпадают"
+        assert field1.name == field2.name, "name полей не совпадают"
+        assert field1.hint == field2.hint, "hint полей не совпадают"
+        assert field1.type == field2.type, "type полей не совпадают"
+        assert field1.length == field2.length, "length полей не совпадают"
+        assert field1.mask == field2.mask, "mask полей не совпадают"
+
+    def _compare_groups(self, group1, group2):
+        assert group1.name == group2.name, "Имена групп не совпадают"
+        assert len(group1.fields) == len(
+            group2.fields
+        ), "Размеры групп не совпадают"
+        for field1, field2 in zip(group1.fields, group2.fields):
+            self._compare_fields(field1, field2)
+
     def _compare_templates(self, tpl1, tpl2):
-        # assert isinstance(tpl1, (Template)
         assert tpl1.title == tpl2.title
         assert tpl1.description == tpl2.description
         assert tpl1.deleted == tpl2.deleted
+        assert tpl1.thumbnail == tpl2.thumbnail
         assert len(tpl1.grouped_fields) == len(tpl2.grouped_fields)
         assert len(tpl1.ungrouped_fields) == len(tpl2.ungrouped_fields)
+        for group1, group2 in zip(tpl1.grouped_fields, tpl2.grouped_fields):
+            self._compare_groups(group1, group2)
+        for field1, field2 in zip(
+            tpl1.ungrouped_fields, tpl2.ungrouped_fields
+        ):
+            self._compare_fields(field1, field2)
+
+    async def _check_template_by_id(self, id, expected_dto: TemplateReadDTO):
+        read_dto = await TemplateService.get(id=id)
+        assert read_dto, "Объект не найден в базе"
+        self._compare_templates(read_dto, expected_dto)
 
     async def test_get_invalid_id_raises_exception(self):
         with pytest.raises(TemplateNotFoundException):
             obj_dto = await TemplateService.get(id=100)
 
-    @pytest.mark.parametrize("data", templates_for_write)
-    async def test_add_and_delete(self, data):
-        write_dto = TemplateWriteDTO(**data)
+    @pytest.mark.parametrize(
+        "write_data, read_data", zip(templates_for_write, templates_for_read)
+    )
+    async def test_add_and_delete(
+        self,
+        write_data: dict[str, Any],
+        read_data: dict[str, Any],
+    ):
+        write_dto = TemplateWriteDTO(**write_data)
         db_len = len(await TemplateService.get_all())
         new_obj_id = await TemplateService.add(write_dto)
         assert new_obj_id, "Функция не вернула id нового объекта"
@@ -296,50 +81,72 @@ class TestTemplateService:
         assert db_len + 1 == new_db_len, "Объект не добавлен в базу"
 
         # Чтение записи по id из базы
-        read_dto = await TemplateService.get(id=new_obj_id)
-        assert read_dto, "Объект не найден в базе"
-        self._compare_templates(write_dto, read_dto)
-        # assert obj_db.id == new_dto.id
-        # assert obj_db.type == new_dto.type
-        # assert obj_db.name == new_dto.name
-        # assert obj_db.mask == new_dto.mask
+        expected_dto = TemplateReadDTO(**read_data)
+        await self._check_template_by_id(new_obj_id, expected_dto)
 
         # удаление созданной записи
-        # await TemplateService.delete(id)
-        # new_db_len = len(await TemplateService.get_all())
-        # assert new_db_len == db_len
-        # with pytest.raises(TemplateNotFoundException):
-        #     obj_db = await TemplateService.get(id=id)
-        #     assert not obj_db, "Объект не удален из базы"
-        # new_db_len = len(await TemplateService.get_all(include_deleted=True))
-        # assert (
-        #     new_db_len == db_len + 1
-        # ), "Объект удален, а не помечен как удаленный"
+        await TemplateService.delete(new_obj_id)
+        new_db_len = len(await TemplateService.get_all())
+        assert new_db_len == db_len
+        with pytest.raises(TemplateNotFoundException):
+            obj_db = await TemplateService.get(id=new_obj_id)
+            assert not obj_db, "Объект не удален из базы"
 
-    # async def test_get_all(self):
-    #     dto_list = await TemplateFieldTypeService.get_all()
-    #     assert len(dto_list) == len(template_field_type_dict)
-    #     unique_id_db = set(dto_list.id for dto_list in dto_list)
-    #     assert len(unique_id_db) == len(
-    #         template_field_type_dict
-    #     ), "Ответ содержит дублирующиеся id"
-    #     for dto in dto_list:
-    #         dto_fields = (dto.type, dto.name, dto.mask)
-    #         assert (
-    #             template_field_type_dict[dto.id] == dto_fields
-    #         ), "Поля ответа не соответствуют ожидаемым"
+        with pytest.raises(TemplateAlreadyDeletedException):
+            await TemplateService.delete(id=new_obj_id)
+            assert (
+                False
+            ), "Повторное удаление должно взводить TemplateAlreadyDeletedException"
 
-    # @pytest.mark.parametrize(*template_field_type_mock)
-    # async def test_add_duplicate_type_raises_exception(
-    #     self, id, type, name, mask
-    # ):
-    #     new_obj = TemplateFieldTypeWriteDTO(type=type, name="", mask="")
-    #     with pytest.raises(TypeFieldAlreadyExistsException):
-    #         await TemplateFieldTypeService.add(new_obj)
+    async def test_get_all_and_delete(self):
+        db_len = len(await TemplateService.get_all())
+        db_with_deleted_len = len(
+            await TemplateService.get_all(include_deleted=True)
+        )
+        # добавление нескольких объектов в базу
+        new_obj_ids = []
+        for write_data in templates_for_write:
+            write_dto = TemplateWriteDTO(**write_data)
+            new_id = await TemplateService.add(write_dto)
+            assert new_id, "Функция не вернула id нового объекта"
+            new_obj_ids.append(new_id)
+        new_db_len = len(await TemplateService.get_all())
+        assert (
+            db_len + len(templates_for_read) == new_db_len
+        ), "Объекты не добавлены в базу"
 
-    # async def test_delete_invalid_id_raises_exception(self):
-    #     with pytest.raises(TypeFieldNotFoundException):
-    #         await TemplateFieldTypeService.delete(id=100)
+        # проверка их наличия в базе
+        expected_dtos = [TemplateReadDTO(**x) for x in templates_for_read]
+        for id, expected_dto in zip(new_obj_ids, expected_dtos):
+            await self._check_template_by_id(id, expected_dto)
+
+        # удаление созданных записей
+        for id in new_obj_ids:
+            await TemplateService.delete(id)
+            with pytest.raises(TemplateNotFoundException):
+                obj_db = await TemplateService.get(id=id)
+                assert not obj_db, "Объект не удален из базы"
+        # проверка количества записей в б.д.
+        new_db_len = len(await TemplateService.get_all())
+        new_db_with_deleted_len = len(
+            await TemplateService.get_all(include_deleted=True)
+        )
+        assert (
+            db_len == new_db_len
+        ), "Кол-во записей в б.д. не соответствует ожидаемым"
+        assert new_db_with_deleted_len == db_with_deleted_len + len(
+            new_obj_ids
+        )
+
+    async def test_post_invalid_type_raises_exception(self):
+        new_obj = TemplateWriteDTO(**template_with_invalid_type_field)
+        with pytest.raises(TypeFieldNotFoundException):
+            new_id = await TemplateService.add(new_obj)
+            assert new_id, "Создан объект с ошибочным типом"
+
+    async def test_delete_invalid_id_raises_exception(self):
+        with pytest.raises(TemplateNotFoundException):
+            await TemplateService.delete(id=100)
 
     # async def test_update(self):
     #     new_obj = TemplateFieldTypeWriteDTO(
