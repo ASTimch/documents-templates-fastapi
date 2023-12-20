@@ -1,5 +1,7 @@
-from app.api import routers
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+
+from app.api import routers
 from app.config import settings
 
 app = FastAPI(
@@ -12,7 +14,10 @@ app = FastAPI(
     # lifespan=register_init,
 )
 
+
 app.include_router(routers.v1)
+
+app.mount("/static", StaticFiles(directory="app/static"), "static")
 
 # if __name__ == "__main__":
 #     import uvicorn

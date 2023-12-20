@@ -20,3 +20,13 @@ class TypeFieldNotFoundException(TemplateException):
 class TypeFieldAlreadyExistsException(TemplateException):
     status_code = status.HTTP_409_CONFLICT
     detail = Messages.TYPE_FIELD_ALREADY_EXISTS
+
+
+class TemplateNotFoundException(TemplateException):
+    status_code = status.HTTP_404_NOT_FOUND
+    detail = Messages.TEMPLATE_NOT_FOUND
+
+
+class TemplateAlreadyDeletedException(TemplateException):
+    status_code = status.HTTP_410_GONE
+    detail = Messages.TEMPLATE_ALREADY_DELETED

@@ -6,9 +6,9 @@ from app.common.exceptions import (
 )
 from app.schemas.template import (
     TemplateFieldTypeReadDTO,
-    TemplateFieldTypeAddDTO,
+    TemplateFieldTypeWriteDTO,
 )
-from app.services.template import TemplateFieldTypeService
+from app.services.template_field_type import TemplateFieldTypeService
 
 template_field_type_mock = (
     "id, type, name, mask",
@@ -21,6 +21,11 @@ template_field_type_mock = (
 
 # Построение словаря исходных данных с ключом id
 template_field_type_dict = {x[0]: x[1:] for x in template_field_type_mock[1]}
+
+# Построение словаря соответствий type:id
+template_field_type_id_mapping = {
+    x[1]: x[0] for x in template_field_type_mock[1]
+}
 
 
 class TestFieldTypeService:
@@ -52,7 +57,7 @@ class TestFieldTypeService:
             ), "Поля ответа не соответствуют ожидаемым"
 
     async def test_field_type_add_delete(self):
-        new_obj = TemplateFieldTypeAddDTO(
+        new_obj = TemplateFieldTypeWriteDTO(
             type="currency", name="Валюта", mask="маска"
         )
 
@@ -86,7 +91,7 @@ class TestFieldTypeService:
     async def test_add_duplicate_type_raises_exception(
         self, id, type, name, mask
     ):
-        new_obj = TemplateFieldTypeAddDTO(type=type, name="", mask="")
+        new_obj = TemplateFieldTypeWriteDTO(type=type, name="", mask="")
         with pytest.raises(TypeFieldAlreadyExistsException):
             await TemplateFieldTypeService.add(new_obj)
 
@@ -95,10 +100,10 @@ class TestFieldTypeService:
             await TemplateFieldTypeService.delete(id=100)
 
     async def test_update(self):
-        new_obj = TemplateFieldTypeAddDTO(
+        new_obj = TemplateFieldTypeWriteDTO(
             type="currency", name="Валюта", mask="маска"
         )
-        updated_obj = TemplateFieldTypeAddDTO(
+        updated_obj = TemplateFieldTypeWriteDTO(
             type="updated_currency",
             name="Валюта изм.",
             mask="новая маска",
@@ -136,3 +141,10 @@ class TestFieldTypeService:
             assert (
                 not obj_dto
             ), "Добавление типа дубликата не вызвало исключение"
+
+    @pytest.mark.parametrize(*template_field_type_mock)
+    async def test_get_all_type_id_mapping(self, id, type, name, mask):
+        type_id_mapping = (
+            await TemplateFieldTypeService.get_all_type_id_mapping()
+        )
+        assert type_id_mapping == template_field_type_id_mapping

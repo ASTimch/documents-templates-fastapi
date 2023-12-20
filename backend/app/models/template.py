@@ -97,25 +97,25 @@ class Template(TimestampMixin, Base):
     __tablename__ = "template"
 
     owner_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("user.id"), nullable=True
+        ForeignKey("user.id", ondelete="SET NULL"), nullable=True
     )
     category_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("category.id", ondelete="SET NULL"),
         nullable=True,
     )
-    filename: Mapped[str]
+    filename: Mapped[Optional[str]] = mapped_column(nullable=True)
     title: Mapped[str]
     description: Mapped[str]
     deleted: Mapped[bool] = mapped_column(default=False)
-    thumbnail: Mapped[str] = mapped_column(String, nullable=True)
+    thumbnail: Mapped[Optional[str]] = mapped_column(nullable=True)
 
     owner: Mapped["User"] = relationship(back_populates="templates")
     category: Mapped["Category"] = relationship(back_populates="templates")
     groups: Mapped[Optional[list["TemplateFieldGroup"]]] = relationship(
-        back_populates="template"
+        back_populates="template", order_by=TemplateFieldGroup.id
     )
     fields: Mapped[Optional[list["TemplateField"]]] = relationship(
-        back_populates="template"
+        back_populates="template", order_by=TemplateField.id
     )
 
     def __str__(self):

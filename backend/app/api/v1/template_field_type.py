@@ -4,10 +4,8 @@ from fastapi import APIRouter, status
 
 from app.database import idpk
 from app.schemas.template import (
-    TemplateFieldTypeAddDTO,
+    TemplateFieldTypeWriteDTO,
     TemplateFieldTypeReadDTO,
-    TemplateRead,
-    TemplateReadMinified,
 )
 from app.services.template import TemplateFieldTypeService
 
@@ -32,7 +30,7 @@ async def get_template_field_type_by_id(
 
 @router.put("/{id}", summary="Обновить тип с заданным id")
 async def update_template_field_type(
-    id: idpk, data: TemplateFieldTypeAddDTO
+    id: idpk, data: TemplateFieldTypeWriteDTO
 ) -> Optional[TemplateFieldTypeReadDTO]:
     template_field_type = await TemplateFieldTypeService.update(id, data)
     return template_field_type
@@ -44,7 +42,7 @@ async def update_template_field_type(
     summary="Добавить тип для полей шаблона",
 )
 async def add_template_field_type(
-    data: TemplateFieldTypeAddDTO,
+    data: TemplateFieldTypeWriteDTO,
 ) -> Optional[TemplateFieldTypeReadDTO]:
     field_type = await TemplateFieldTypeService.add(data)
     return field_type
@@ -56,7 +54,7 @@ async def add_template_field_type(
     summary="Добавить список типов для полей шаблона",
 )
 async def add_template_field_type_list(
-    data: list[TemplateFieldTypeAddDTO],
+    data: list[TemplateFieldTypeWriteDTO],
 ) -> Optional[list[TemplateFieldTypeReadDTO]]:
     field_types = await TemplateFieldTypeService.add_list(data)
     return field_types
