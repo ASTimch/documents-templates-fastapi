@@ -62,11 +62,12 @@ class Settings(BaseSettings):
     REDOC_URL: str | None = f"{API_V1_PREFIX}/redoc"
     OPENAPI_URL: str | None = f"{API_V1_PREFIX}/openapi"
 
+    TEMPLATE_DOCX_DIR: str = "tmp/tpl_docx/"
+    TEMPLATE_THUMBNAIL_DIR: str = "tmp/tpl_thumbnails/"
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8"
     )
-
-    DOCX_TEMPLATE_DIR: str = "app/static/templates/"
 
 
 settings = Settings()

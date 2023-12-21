@@ -2,7 +2,18 @@ from datetime import datetime
 from typing import Optional
 from sqlalchemy import DateTime, ForeignKey, text, String
 
-from app.models.base import Base, TimestampMixin, str_50, str_256
+from app.models.base import (
+    Base,
+    TimestampMixin,
+    str_50,
+    str_256,
+    storage_docx,
+    storage_thumbnail,
+    FileType,
+    ImageType,
+)
+
+# from fastapi_storages.integrations.sqlalchemy import FileType, ImageType
 from app.models.user import User
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -51,7 +62,7 @@ class TemplateFieldGroup(Base):
     )
 
     def __str__(self):
-        return self.name
+        return f"{self.template_id}: {self.id}: {self.name}"
 
 
 class TemplateField(Base):
@@ -103,11 +114,13 @@ class Template(TimestampMixin, Base):
         ForeignKey("category.id", ondelete="SET NULL"),
         nullable=True,
     )
-    filename: Mapped[Optional[str]] = mapped_column(nullable=True)
+    filename = mapped_column(FileType(storage=storage_docx), nullable=True)
     title: Mapped[str]
     description: Mapped[str]
     deleted: Mapped[bool] = mapped_column(default=False)
-    thumbnail: Mapped[Optional[str]] = mapped_column(nullable=True)
+    thumbnail = mapped_column(
+        ImageType(storage=storage_thumbnail), nullable=True
+    )
 
     owner: Mapped["User"] = relationship(back_populates="templates")
     category: Mapped["Category"] = relationship(back_populates="templates")

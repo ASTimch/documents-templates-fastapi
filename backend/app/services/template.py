@@ -260,14 +260,19 @@ class TemplateService:
     @classmethod
     async def update_docx_template(cls, id: int, file: UploadFile) -> None:
         obj_db = await cls.get_or_raise_not_found(id)
-        if obj_db.filename:
-            print("removing old file:", obj_db.filename)
-            await aiofiles.os.remove(obj_db.filename)
-        docx_file_name = settings.DOCX_TEMPLATE_DIR + f"tpl_{obj_db.id}.docx"
-        async with aiofiles.open(docx_file_name, "wb") as out_file:
-            while content := await file.read(1024):
-                await out_file.write(content)
-        await TemplateDAO.update_(obj_db.id, filename=docx_file_name)
+        # force change file name to proper format tpl_<id>.docx
+        file.filename = f"tpl_{obj_db.id}.docx"
+        if obj_db.filename and obj_db.filename.name != file.filename:
+            # delete old file if it has different name
+            await aiofiles.os.remove(obj_db.filename.path)
+        await TemplateDAO.update_(obj_db.id, filename=file)
+
+        # manual saving without fastapi-storage
+        # docx_file_name = settings.TEMPLATE_DOCX_DIR + f"tpl_{obj_db.id}.docx"
+        # async with aiofiles.open(docx_file_name, "wb") as out_file:
+        #     while content := await file.read(1024):
+        #         await out_file.write(content)
+        # await TemplateDAO.update_(obj_db.id, filename=docx_file_name)
 
     @classmethod
     async def delete(cls, id: idpk) -> int:

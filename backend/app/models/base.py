@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Any
 from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -7,6 +7,23 @@ from sqlalchemy.orm import (
     mapped_column,
     MappedAsDataclass,
 )
+from fastapi_storages.integrations.sqlalchemy import FileType as _FileType
+from fastapi_storages.integrations.sqlalchemy import ImageType as _ImageType
+from fastapi_storages import FileSystemStorage
+from app.config import settings
+
+storage_docx = FileSystemStorage(path=settings.TEMPLATE_DOCX_DIR)
+storage_thumbnail = FileSystemStorage(path=settings.TEMPLATE_THUMBNAIL_DIR)
+
+
+class FileType(_FileType):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+
+
+class ImageType(_ImageType):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
 
 
 str_50 = Annotated[str, 50]

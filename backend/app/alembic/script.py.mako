@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+# import path_to_custom_types_py_file
 ${imports if imports else ""}
 
 # revision identifiers, used by Alembic.

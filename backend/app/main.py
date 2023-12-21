@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-
+from sqladmin import Admin
+from app.admin.views import init_admin
 from app.api import routers
 from app.config import settings
+from app.database import engine
 
 app = FastAPI(
     title=settings.TITLE,
@@ -19,7 +21,14 @@ app.include_router(routers.v1)
 
 app.mount("/static", StaticFiles(directory="app/static"), "static")
 
+# подключение админки
+init_admin(app, engine)
+
 # if __name__ == "__main__":
 #     import uvicorn
 
 #     uvicorn.run("app.main:app", reload=True)
+
+# admin = Admin(app, engine, authentication_backend=authentication_backend)
+# admin.add_view(UsersAdmin)
+# admin.add_view(HotelsAdmin)
