@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import aiofiles
 import aiofiles.os
@@ -33,6 +33,7 @@ from app.schemas.template import (
     TemplateReadMinifiedDTO,
     TemplateWriteDTO,
 )
+from app.services.docx_render import DocxRender
 from app.services.template_field_type import TemplateFieldTypeService
 
 # mock for dao and db
@@ -284,3 +285,49 @@ class TemplateService:
         if obj_db.deleted:
             raise TemplateAlreadyDeletedException()
         await TemplateDAO.update_(id, deleted=True)
+
+    @classmethod
+    async def get_inconsistent_tags(
+        cls, id: idpk
+    ) -> Tuple[Tuple[str], Tuple[str]]:
+        """
+        Возвращает списки несогласованных тэгов между БД и шаблоном docx.
+
+        :returns: (excess_tags, excess_fields)
+        excess_tags - тэги, которые имеются в docx, но отсутствуют в БД
+        excess_fields - тэги, которые имеются в БД, но отсутствуют в docx
+        """
+        tpl = await cls.get_or_raise_not_found(id)
+        docx_tags, field_tags = set(), set()
+        if tpl.filename:
+            try:
+                doc = DocxRender(tpl.filename)
+                docx_tags = set(doc.get_tags())
+            except Exception as e:
+                print(e)  # TODO: add logging
+
+        field_tags = {field.tag for field in tpl.fields}
+        excess_tags = tuple(docx_tags - field_tags)
+        excess_fields = tuple(field_tags - docx_tags)
+        return (excess_tags, excess_fields)
+
+    @classmethod
+    async def get_consistency_errors(cls, id: idpk) -> List[Dict[str, str]]:
+        """Проверка согласованности тэгов в docx файле и полях базы данных"""
+
+        excess_tags, excess_fields = await cls.get_inconsistent_tags(id)
+        errors = []
+        if excess_tags:
+            errors.append(
+                {"message": Messages.TEMPLATE_EXCESS_TAGS, "tags": excess_tags}
+            )
+        if excess_fields:
+            errors.append(
+                {
+                    "message": Messages.TEMPLATE_EXCESS_FIELDS,
+                    "tags": excess_fields,
+                }
+            )
+        if errors:
+            return {"errors": errors}
+        return {"result": Messages.TEMPLATE_CONSISTENT}

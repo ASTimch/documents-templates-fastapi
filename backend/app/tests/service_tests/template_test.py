@@ -1,31 +1,29 @@
+import os.path
 from typing import Any
+
 import pytest
+from fastapi import UploadFile
+
 from app.common.exceptions import (
     TemplateAlreadyDeletedException,
     TemplateNotFoundException,
     TypeFieldNotFoundException,
 )
+from app.config import settings
+from app.crud.template_dao import TemplateDAO
 from app.schemas.template import TemplateReadDTO, TemplateWriteDTO
 from app.services.template import TemplateService
 from app.services.template_field_type import TemplateFieldTypeService
 from app.tests.fixtures import (
-    templates_for_write,
-    templates_for_read,
     template_with_invalid_type_field,
+    templates_for_read,
+    templates_for_write,
+    broken_docx_path,
+    broken_docx_error_tags,
 )
 
 
 class TestTemplateService:
-    # @pytest.mark.parametrize(*template_field_type_mock)
-    # async def test_get_success(self, id, type, name, mask):
-    #     obj_dto = await TemplateFieldTypeService.get(id=id)
-    #     assert obj_dto
-    #     assert isinstance(obj_dto, TemplateFieldTypeReadDTO)
-    #     assert obj_dto.id == id
-    #     assert obj_dto.type == type
-    #     assert obj_dto.name == name
-    #     assert obj_dto.mask == mask
-
     def _compare_fields(self, field1, field2):
         assert field1.tag == field2.tag, "tag полей не совпадают"
         assert field1.name == field2.name, "name полей не совпадают"
@@ -148,6 +146,36 @@ class TestTemplateService:
         with pytest.raises(TemplateNotFoundException):
             await TemplateService.delete(id=100)
 
+    @pytest.mark.parametrize(
+        "docx_path, broken_tags", [(broken_docx_path, broken_docx_error_tags)]
+    )
+    async def test_update_docx_template(self, docx_path, broken_tags):
+        write_data = templates_for_write[0]
+        write_dto = TemplateWriteDTO(**write_data)
+        tpl_id = await TemplateService.add(write_dto)
+        assert tpl_id, "Функция не вернула id нового объекта"
+        with open(docx_path, "rb") as test_file:
+            upload_file = UploadFile(
+                file=test_file, filename="broken_template1.docx"
+            )
+            await TemplateService.update_docx_template(
+                tpl_id, file=upload_file
+            )
+        expected_name = f"tpl_{tpl_id}.docx"
+        expected_path = settings.TEMPLATE_DOCX_DIR + expected_name
+        print(expected_name)
+        tpl = await TemplateDAO.get_by_id(tpl_id)
+        assert tpl.filename, "Шаблон не загружен"
+        assert tpl.filename.name == expected_name, "Ошибочное имя docx"
+        assert os.path.samefile(
+            tpl.filename.path, expected_path
+        ), "Ошибочный путь docx"
+
+        # проверка get_inconsistent_tags
+        inconsistent_tags = await TemplateService.get_inconsistent_tags(tpl_id)
+        assert inconsistent_tags == broken_tags, "Ошибка проверки тэгов"
+        # assert os.path.exists("")
+
     # async def test_update(self):
     #     new_obj = TemplateFieldTypeWriteDTO(
     #         type="currency", name="Валюта", mask="маска"
@@ -190,10 +218,3 @@ class TestTemplateService:
     #         assert (
     #             not obj_dto
     #         ), "Добавление типа дубликата не вызвало исключение"
-
-    # @pytest.mark.parametrize(*template_field_type_mock)
-    # async def test_get_all_type_id_mapping(self, id, type, name, mask):
-    #     type_id_mapping = (
-    #         await TemplateFieldTypeService.get_all_type_id_mapping()
-    #     )
-    #     assert type_id_mapping == template_field_type_id_mapping

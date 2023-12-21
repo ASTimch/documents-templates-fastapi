@@ -350,3 +350,6 @@ template_with_invalid_type_field = {
         }
     ],
 }
+
+broken_docx_path = "app/tests/service_tests/docx/broken_template1.docx"
+broken_docx_error_tags = (("Тэг7",), ("Тэг6",))

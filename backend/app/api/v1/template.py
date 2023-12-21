@@ -1,5 +1,6 @@
 from typing import Optional
-from fastapi import APIRouter, UploadFile, status
+from fastapi import APIRouter, Response, UploadFile, status
+from fastapi.responses import JSONResponse
 from app.schemas.template import (
     TemplateFieldReadDTO,
     TemplateReadDTO,
@@ -53,3 +54,13 @@ async def add_template(data: TemplateWriteDTO) -> Optional[TemplateReadDTO]:
 )
 async def delete_template(template_id: int):
     await TemplateService.delete(template_id)
+
+
+@router.get(
+    "/{template_id}/check_consistency",
+    summary="Проверить согласованность полей и тэгов docx шаблона",
+    status_code=status.HTTP_200_OK,
+)
+async def check_consistency(template_id: int):
+    result = await TemplateService.get_consistency_errors(template_id)
+    return JSONResponse(content=result)
