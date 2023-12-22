@@ -4,6 +4,7 @@ from fastapi import APIRouter, Response, UploadFile, status
 from fastapi.responses import FileResponse, JSONResponse
 from app.schemas.template import (
     TemplateFieldReadDTO,
+    TemplateFieldWriteValueListDTO,
     TemplateReadDTO,
     TemplateReadMinifiedDTO,
     TemplateWriteDTO,
@@ -72,13 +73,26 @@ async def check_consistency(template_id: int):
     summary="Получить файл черновика в формате docx или pdf",
     status_code=status.HTTP_200_OK,
 )
-async def check_consistency(
-    template_id: int, pdf: bool = False
+async def get_draft(template_id: int, pdf: bool = False) -> FileResponse:
+    file, filename = await TemplateService.get_draft(template_id, pdf)
+    response = await TemplateService.get_file_response(file, filename, pdf)
+    return response
+
+
+@router.post(
+    "/{template_id}/download_preview",
+    summary="Получить превью документа в формате docx или pdf",
+    status_code=status.HTTP_200_OK,
+)
+async def get_preview(
+    template_id: int,
+    field_values: TemplateFieldWriteValueListDTO,
+    pdf: bool = False,
 ) -> FileResponse:
-    try:
-        file, filename = await TemplateService.get_draft(template_id, pdf)
-    except Exception:
-        logging.exception("Pdf conversion failed")
-        return Response("Pdf conversion failed", status_code=503)
+    file, filename = await TemplateService.get_preview(
+        template_id,
+        field_values.model_dump()["fields"],
+        pdf,
+    )
     response = await TemplateService.get_file_response(file, filename, pdf)
     return response

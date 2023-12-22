@@ -12,7 +12,9 @@ import urllib
 from app.common.constants import Messages
 from app.common.exceptions import (
     TemplateAlreadyDeletedException,
+    TemplateFieldNotFoundException,
     TemplateNotFoundException,
+    TemplatePdfConvertErrorException,
     TemplateRenderErrorException,
     TypeFieldNotFoundException,
 )
@@ -374,6 +376,88 @@ class TemplateService:
             raise TemplateRenderErrorException
         filename = f"{tpl.title}_шаблон.docx"
         if pdf:
-            buffer = PdfConverter.docx_to_pdf(buffer)
-            filename = f"{tpl.title}_шаблон.pdf"
+            try:
+                buffer = PdfConverter.docx_to_pdf(buffer)
+                filename = f"{tpl.title}_шаблон.pdf"
+            except Exception as e:
+                print(e)
+                logging.exception("PDF conversion failed")
+                raise TemplatePdfConvertErrorException
         return buffer, filename
+
+    @classmethod
+    async def get_preview(
+        cls, id: idpk, field_values: list[dict[int, str]], pdf=False
+    ) -> Tuple[BytesIO, str]:
+        """Возвращает документ с заполненными полями в формате docx или pdf
+
+        :id: id шаблона
+        :fields: список значений полей в виде {"field_id":id, "value":значение}
+        :return:  (file: BytesIO, filename: str)
+        """
+
+        tpl = await cls.get_or_raise_not_found(id)
+        fields_dict = {field.id: field for field in tpl.fields}
+        context = {}
+        for field_value in field_values:
+            field = fields_dict.get(field_value["field_id"])
+            if not field:
+                raise TemplateFieldNotFoundException(
+                    Messages.TEMPLATE_FIELD_NOT_FOUND.format(
+                        field_id=field_value["field_id"], template_id=id
+                    )
+                )
+            if field_value["value"]:
+                context[field.tag] = field_value["value"]
+        context_default = {
+            field.tag: field.default or field.name for field in tpl.fields
+        }
+        docx_path = tpl.filename
+        try:
+            doc = DocxRender(docx_path)
+            buffer = doc.get_partial(context, context_default)
+        except Exception as e:
+            print(e)
+            logging.exception("DocxRender conversion failed")
+            raise TemplateRenderErrorException
+        filename = f"{tpl.title}_preview.docx"
+        if pdf:
+            try:
+                buffer = PdfConverter.docx_to_pdf(buffer)
+                filename = f"{tpl.title}_preview.pdf"
+            except Exception as e:
+                print(e)
+                logging.exception("PDF conversion failed")
+                raise TemplatePdfConvertErrorException
+        return buffer, filename
+
+
+# class AnonymousDownloadPreviewAPIView(views.APIView):
+#     permission_classes = (AllowAny,)
+
+#     def post(self, request, template_id):
+#         template = get_object_or_404(Template, id=template_id)
+#         document_fields = request.data.get("document_fields")
+#         serializer = DocumentFieldWriteSerializer(
+#             data=document_fields,
+#             context={"template_fields": set(template.fields.all())},
+#             many=True,
+#         )
+#         serializer.is_valid(raise_exception=True)
+#         v1utils.custom_fieldtypes_validation(serializer.validated_data)
+#         context = {}
+#         for data in serializer.validated_data:
+#             if data["value"]:  # write only fields with non empty value
+#                 context[data["field"].tag] = data["value"]
+#         context_default = {
+#             field.tag: field.default or field.name
+#             for field in template.fields.all()
+#         }
+#         doc = DocumentTemplate(template.template)
+#         buffer = doc.get_partial(context, context_default)
+#         filename = f"{template.name}_preview.docx"
+#         if request.query_params.get("pdf"):
+#             buffer = v1utils.convert_file_to_pdf(buffer)
+#             filename = f"{template.name}_preview.pdf"
+#         response = send_file(buffer, filename)
+#         return response

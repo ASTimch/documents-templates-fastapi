@@ -249,6 +249,7 @@ class DocxRender:
         context_default - словарь значений по умолчанию {тэг:зн.по умолчанию}
         если тэг не найден ни в одном из контекстов, то заменяется на ''
         """
+        self._customfilters.enable(True)  # switch custom filters on
         self._template.init_docx()
         non_filled_tags = self.get_tags() - context.keys()
         default_tags = set()

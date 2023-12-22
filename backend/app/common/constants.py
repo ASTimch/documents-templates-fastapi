@@ -9,6 +9,9 @@ class Messages:
     GROUP_NOT_FOUND: Final = "Группа полей не найдена"
     TEMPLATE_NOT_FOUND: Final = "Шаблон не найден"
     DOCUMENT_NOT_FOUND: Final = "Документ не найден"
+    TEMPLATE_FIELD_NOT_FOUND: Final = (
+        "Поле {field_id} шаблона {template_id} не найдено"
+    )
 
     TEMPLATE_ALREADY_DELETED: Final = "Шаблон уже удален"
 

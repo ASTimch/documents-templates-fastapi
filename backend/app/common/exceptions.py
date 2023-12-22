@@ -27,6 +27,11 @@ class TemplateNotFoundException(TemplateException):
     detail = Messages.TEMPLATE_NOT_FOUND
 
 
+class TemplateFieldNotFoundException(TemplateException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = Messages.TEMPLATE_FIELD_NOT_FOUND
+
+
 class TemplateAlreadyDeletedException(TemplateException):
     status_code = status.HTTP_410_GONE
     detail = Messages.TEMPLATE_ALREADY_DELETED

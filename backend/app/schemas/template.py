@@ -46,6 +46,14 @@ class TemplateFieldReadDTO(TemplateFieldWriteDTO):
     mask: Annotated[str, Field(description="Маска валидации")]
 
 
+class TemplateFieldWriteValueDTO(BaseModel):
+    """Установка значения для поля шаблона"""
+
+    model_config = ConfigDict(from_attributes=True)
+    field_id: id_int
+    value: Annotated[str, Field(description="Значение")]
+
+
 class TemplateFieldGroupReadDTO(BaseModel):
     """Группа полей шаблона"""
 
@@ -105,3 +113,9 @@ class TemplateWriteDTO(BaseModel):
     deleted: Annotated[bool, Field(description="Удален", default=False)]
     grouped_fields: Optional[list[TemplateFieldGroupWriteDTO]]
     ungrouped_fields: Optional[list[TemplateFieldWriteDTO]]
+
+
+class TemplateFieldWriteValueListDTO(BaseModel):
+    """Значения полей шаблона для превью"""
+
+    fields: list[TemplateFieldWriteValueDTO]
