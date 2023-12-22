@@ -1,15 +1,19 @@
 from datetime import datetime
+from io import BytesIO
+import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import aiofiles
 import aiofiles.os
-from fastapi import UploadFile
+from fastapi import Response, UploadFile
 from sqlalchemy import Sequence
+import urllib
 
 from app.common.constants import Messages
 from app.common.exceptions import (
     TemplateAlreadyDeletedException,
     TemplateNotFoundException,
+    TemplateRenderErrorException,
     TypeFieldNotFoundException,
 )
 from app.config import settings
@@ -34,6 +38,7 @@ from app.schemas.template import (
     TemplateWriteDTO,
 )
 from app.services.docx_render import DocxRender
+from app.services.pdf_converter import PdfConverter
 from app.services.template_field_type import TemplateFieldTypeService
 
 # mock for dao and db
@@ -331,3 +336,44 @@ class TemplateService:
         if errors:
             return {"errors": errors}
         return {"result": Messages.TEMPLATE_CONSISTENT}
+
+    @classmethod
+    async def get_file_response(
+        cls, file: BytesIO, filename: str, pdf: bool = False
+    ) -> Response:
+        """Формирует и возвращает ответ для отправки файла"""
+        if pdf:
+            media_type = "application/pdf"
+        else:
+            media_type = "application/docx"
+        headers = {
+            "Content-Disposition": "attachment; filename*=utf-8''{}".format(
+                urllib.parse.quote(filename, encoding="utf-8")
+            )
+        }
+        return Response(
+            file.getvalue(), headers=headers, media_type=media_type
+        )
+
+    @classmethod
+    async def get_draft(cls, id: idpk, pdf=False) -> Tuple[BytesIO, str]:
+        """Возвращает черновик документа в формате docx или pdf
+
+        В черновике все тэги заменены соответствующими наименованиями полей
+        :return:  (file: BytesIO, filename: str)
+        """
+
+        tpl = await cls.get_or_raise_not_found(id)
+        context = {field.tag: field.name for field in tpl.fields}
+        docx_path = tpl.filename
+        try:
+            doc = DocxRender(docx_path)
+            buffer = doc.get_draft(context)
+        except Exception as e:
+            print(e)  # TODO: log exception
+            raise TemplateRenderErrorException
+        filename = f"{tpl.title}_шаблон.docx"
+        if pdf:
+            buffer = PdfConverter.docx_to_pdf(buffer)
+            filename = f"{tpl.title}_шаблон.pdf"
+        return buffer, filename

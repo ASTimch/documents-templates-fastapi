@@ -27,3 +27,6 @@ class Messages:
     # TEMPLATE_GROUP_IDS_ARE_NOT_UNIQUE: Final = (
     #     "Группы полей шаблона содержат неуникальные идентификаторы id {}"
     # )
+
+    RENDER_ERROR: Final = "Непредвиденная ошибка при генерации документа"
+    PDF_CONVERT_ERROR: Final = "Непредвиденная ошибка при генерации pdf"

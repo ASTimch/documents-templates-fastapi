@@ -30,3 +30,13 @@ class TemplateNotFoundException(TemplateException):
 class TemplateAlreadyDeletedException(TemplateException):
     status_code = status.HTTP_410_GONE
     detail = Messages.TEMPLATE_ALREADY_DELETED
+
+
+class TemplateRenderErrorException(TemplateException):
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    detail = Messages.RENDER_ERROR
+
+
+class TemplatePdfConvertErrorException(TemplateException):
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    detail = Messages.PDF_CONVERT_ERROR
