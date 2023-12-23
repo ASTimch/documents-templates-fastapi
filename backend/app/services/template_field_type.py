@@ -88,7 +88,9 @@ class TemplateFieldTypeService:
 
         obj_by_id = await TemplateFieldTypeDAO.get_by_id(id)
         if not obj_by_id:
-            raise TypeFieldNotFoundException()
+            raise TypeFieldNotFoundException(
+                detail=Messages.TYPE_FIELD_NOT_FOUND.format(id)
+            )
         obj_by_type = await TemplateFieldTypeDAO.get_one_or_none(type=obj.type)
         if obj_by_type and obj_by_type.id != id:
             raise TypeFieldAlreadyExistsException(
@@ -103,5 +105,7 @@ class TemplateFieldTypeService:
 
         obj_db = await TemplateFieldTypeDAO.get_by_id(id)
         if not obj_db:
-            raise TypeFieldNotFoundException()
+            raise TypeFieldNotFoundException(
+                detail=Messages.TYPE_FIELD_NOT_FOUND.format(id)
+            )
         await TemplateFieldTypeDAO.delete_(id)

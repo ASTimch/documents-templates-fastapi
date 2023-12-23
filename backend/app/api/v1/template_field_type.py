@@ -1,13 +1,15 @@
 from typing import Optional
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 
 from app.database import idpk
+from app.models.user import User
 from app.schemas.template import (
     TemplateFieldTypeWriteDTO,
     TemplateFieldTypeReadDTO,
 )
 from app.services.template import TemplateFieldTypeService
+from app.auth import current_superuser
 
 router = APIRouter()
 
@@ -30,7 +32,9 @@ async def get_template_field_type_by_id(
 
 @router.put("/{id}", summary="Обновить тип с заданным id")
 async def update_template_field_type(
-    id: idpk, data: TemplateFieldTypeWriteDTO
+    id: idpk,
+    data: TemplateFieldTypeWriteDTO,
+    user: User = Depends(current_superuser),
 ) -> Optional[TemplateFieldTypeReadDTO]:
     template_field_type = await TemplateFieldTypeService.update(id, data)
     return template_field_type
@@ -42,7 +46,7 @@ async def update_template_field_type(
     summary="Добавить тип для полей шаблона",
 )
 async def add_template_field_type(
-    data: TemplateFieldTypeWriteDTO,
+    data: TemplateFieldTypeWriteDTO, user: User = Depends(current_superuser)
 ) -> Optional[TemplateFieldTypeReadDTO]:
     field_type = await TemplateFieldTypeService.add(data)
     return field_type
@@ -55,6 +59,7 @@ async def add_template_field_type(
 )
 async def add_template_field_type_list(
     data: list[TemplateFieldTypeWriteDTO],
+    user: User = Depends(current_superuser),
 ) -> Optional[list[TemplateFieldTypeReadDTO]]:
     field_types = await TemplateFieldTypeService.add_list(data)
     return field_types
@@ -65,5 +70,5 @@ async def add_template_field_type_list(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Удалить тип",
 )
-async def delete_template(id: idpk):
+async def delete_template(id: idpk, user: User = Depends(current_superuser)):
     await TemplateFieldTypeService.delete(id)

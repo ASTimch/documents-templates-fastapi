@@ -1,7 +1,11 @@
 import logging
 from typing import Optional
-from fastapi import APIRouter, Response, UploadFile, status
+
+from fastapi import APIRouter, Depends, Response, UploadFile, status
 from fastapi.responses import FileResponse, JSONResponse
+
+from app.auth import current_superuser
+from app.models.user import User
 from app.schemas.template import (
     TemplateFieldReadDTO,
     TemplateFieldWriteValueListDTO,
@@ -27,8 +31,10 @@ async def get_template_by_id(template_id: int) -> Optional[TemplateReadDTO]:
 
 
 @router.put("/{template_id}", summary="Обновить шаблон")
-async def update_template(template_id: int):
-    pass
+async def update_template(
+    template_id: int, user: User = Depends(current_superuser)
+):
+    raise NotImplementedError
 
 
 @router.patch(
@@ -36,14 +42,18 @@ async def update_template(template_id: int):
     summary="Обновить docx шаблон",
     status_code=status.HTTP_200_OK,
 )
-async def upload_docx_template(template_id: int, file: UploadFile):
+async def upload_docx_template(
+    template_id: int, file: UploadFile, user: User = Depends(current_superuser)
+):
     await TemplateService.update_docx_template(template_id, file)
 
 
 @router.post(
     "/", status_code=status.HTTP_201_CREATED, summary="Добавить шаблон"
 )
-async def add_template(data: TemplateWriteDTO) -> Optional[TemplateReadDTO]:
+async def add_template(
+    data: TemplateWriteDTO, user: User = Depends(current_superuser)
+) -> Optional[TemplateReadDTO]:
     template_id = await TemplateService.add(data)
     tempalte_dao = await TemplateService.get(id=template_id)
     return tempalte_dao
@@ -54,7 +64,9 @@ async def add_template(data: TemplateWriteDTO) -> Optional[TemplateReadDTO]:
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Удалить шаблон",
 )
-async def delete_template(template_id: int):
+async def delete_template(
+    template_id: int, user: User = Depends(current_superuser)
+):
     await TemplateService.delete(template_id)
 
 
@@ -63,7 +75,9 @@ async def delete_template(template_id: int):
     summary="Проверить согласованность полей и тэгов docx шаблона",
     status_code=status.HTTP_200_OK,
 )
-async def check_consistency(template_id: int):
+async def check_consistency(
+    template_id: int, user: User = Depends(current_superuser)
+):
     result = await TemplateService.get_consistency_errors(template_id)
     return JSONResponse(content=result)
 

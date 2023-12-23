@@ -5,6 +5,7 @@ from app.models.template import (
     TemplateFieldType,
     Template,
 )
+from app.models.user import User
 
 
 class TemplateFieldTypeAdmin(ModelView, model=TemplateFieldType):
@@ -60,6 +61,22 @@ class TemplateAdmin(ModelView, model=Template):
         pass
 
 
+class UserAdmin(ModelView, model=User):
+    # column_list = [c.name for c in Template.__table__.c] + [
+    #     Template.groups,
+    #     Template.fields,
+    # ]
+    column_list = "__all__"
+    name = "Пользователь"
+    name_plural = "Пользователи"
+    icon = "fa-solid fa-person"
+
+    async def on_model_delete(self, model):
+        # mark User as inactive
+        # log action
+        pass
+
+
 # class RoomsAdmin(ModelView, model=Rooms):
 #     column_list = [c.name for c in Rooms.__table__.c] + [
 #         Rooms.hotel,
@@ -78,16 +95,6 @@ class TemplateAdmin(ModelView, model=Template):
 #     icon = "fa-solid fa-bed"
 
 
-# class BookingsAdmin(ModelView, model=Bookings):
-#     column_list = [c.name for c in Bookings.__table__.c] + [
-#         Bookings.user,
-#         Bookings.room,
-#     ]
-#     name = "Бронь"
-#     name_plural = "Брони"
-#     icon = "fa-solid fa-book"
-
-
 def init_admin(app, engine):
     # admin = Admin(app, engine, authentication_backend=authentication_backend)
     admin = Admin(app, engine)
@@ -96,3 +103,4 @@ def init_admin(app, engine):
     admin.add_view(TemplateFieldAdmin)
     admin.add_view(TemplateFieldGroupAdmin)
     admin.add_view(TemplateAdmin)
+    admin.add_view(UserAdmin)
