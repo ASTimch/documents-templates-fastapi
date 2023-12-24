@@ -36,15 +36,41 @@ class TestFieldTypeApiV1:
         type_dict = response.json()
         assert type_dict == expected_get_json[id - 1]
 
-    async def test_post_patch_delete(self, route, ac: AsyncClient):
+    async def test_post_patch_delete_anonymous(self, route, ac: AsyncClient):
         response = await ac.post(route, json=new_type_json)
+        assert response.status_code == 401
+
+        response = await ac.put(route + str(1), json=new_type_json)
+        assert response.status_code == 401
+
+        response = await ac.delete(route + str(1))
+        assert response.status_code == 401
+
+    async def test_post_patch_delete_not_superuser(
+        self, route, user_ac: AsyncClient
+    ):
+        response = await user_ac.post(route, json=new_type_json)
+        print(response.cookies)
+        print(user_ac.cookies)
+        print(response.request)
+        print(response.request.headers)
+        assert response.status_code == 403
+
+        response = await user_ac.put(route + str(1), json=new_type_json)
+        assert response.status_code == 403
+
+        response = await user_ac.delete(route + str(1))
+        assert response.status_code == 403
+
+    async def test_post_patch_delete(self, route, superuser_ac: AsyncClient):
+        response = await superuser_ac.post(route, json=new_type_json)
         assert response.status_code == 201
         type_dict = response.json()
         id = type_dict.pop("id")
         assert type_dict == new_type_json
 
         # чтение вновь созданной записи
-        response = await ac.get(route + str(id))
+        response = await superuser_ac.get(route + str(id))
         assert response.status_code == 200
         type_dict = response.json()
         id = type_dict.pop("id")
@@ -56,23 +82,29 @@ class TestFieldTypeApiV1:
             "name": "new_валюта",
             "mask": "111",
         }
-        response = await ac.put(route + str(id), json=updated_type_json)
+        response = await superuser_ac.put(
+            route + str(id), json=updated_type_json
+        )
         assert response.status_code == 200
         type_dict = response.json()
         id = type_dict.pop("id")
         assert type_dict == updated_type_json
 
         # удаление обновленной записи
-        response = await ac.delete(route + str(id))
+        response = await superuser_ac.delete(route + str(id))
         assert response.status_code == 204
 
-        response = await ac.get(route + str(id))
+        response = await superuser_ac.get(route + str(id))
         assert response.status_code == 404
 
-    async def test_post_update_duplicate_types(self, route, ac: AsyncClient):
-        response = await ac.post(route, json=duplicate_type_json)
+    async def test_post_update_duplicate_types(
+        self, route, superuser_ac: AsyncClient
+    ):
+        response = await superuser_ac.post(route, json=duplicate_type_json)
         assert response.status_code == 409
         assert response.json().get("detail") == "Тип поля int уже существует"
-        response = await ac.put(route + "1", json=duplicate_type_json)
+        response = await superuser_ac.put(
+            route + "1", json=duplicate_type_json
+        )
         assert response.status_code == 409
         assert response.json().get("detail") == "Тип поля int уже существует"
