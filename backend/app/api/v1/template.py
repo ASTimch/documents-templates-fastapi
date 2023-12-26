@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Response, UploadFile, status
 from fastapi.responses import FileResponse, JSONResponse
 
-from app.auth import current_superuser
+from app.auth import current_superuser, current_active_user
 from app.models.user import User
 from app.schemas.template import (
     TemplateFieldReadDTO,
@@ -13,6 +13,7 @@ from app.schemas.template import (
     TemplateReadMinifiedDTO,
     TemplateWriteDTO,
 )
+from app.services.favorite import TemplateFavoriteService
 from app.services.template import TemplateService
 
 router = APIRouter()
@@ -110,3 +111,32 @@ async def get_preview(
     )
     response = await TemplateService.get_file_response(file, filename, pdf)
     return response
+
+
+@router.post(
+    "/{template_id}/favorite/",
+    status_code=status.HTTP_201_CREATED,
+    summary="Добавить шаблон в избранное",
+)
+async def add_template_to_favorite(
+    template_id: int,
+    user: User = Depends(current_active_user),
+) -> Optional[TemplateReadDTO]:
+    template_dao = await TemplateService.get(id=template_id)
+    await TemplateFavoriteService.add_favorite(
+        user_id=user.id, template_id=template_dao.id
+    )
+
+
+@router.delete(
+    "/{template_id}/favorite/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить шаблон из избранного",
+)
+async def delete_template(
+    template_id: int, user: User = Depends(current_active_user)
+):
+    template_dao = await TemplateService.get(id=template_id)
+    await TemplateFavoriteService.delete_favorite(
+        user_id=user.id, template_id=template_dao.id
+    )

@@ -5,6 +5,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.config import settings
 from app.models.base import Base
+from app.models.favorite import UserTemplateFavorite
 from app.models.template import (
     Template,
     TemplateField,

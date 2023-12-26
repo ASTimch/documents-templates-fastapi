@@ -6,13 +6,14 @@ from app.models.template import (
     Template,
 )
 from app.models.user import User
+from app.models.favorite import UserTemplateFavorite
 
 
 class TemplateFieldTypeAdmin(ModelView, model=TemplateFieldType):
     column_list = [c.name for c in TemplateFieldType.__table__.c]
     name = "Тип"
     name_plural = "Типы"
-    icon = "fa-solid fa-hotel"
+    icon = "fa-solid fa-shapes"
 
 
 class TemplateFieldAdmin(ModelView, model=TemplateField):
@@ -43,13 +44,14 @@ class TemplateFieldGroupAdmin(ModelView, model=TemplateFieldGroup):
     ]
     name = "Группа"
     name_plural = "Группы"
-    # icon = "fa-solid fa-hotel"
+    # icon = "fa-solid fa-group"
 
 
 class TemplateAdmin(ModelView, model=Template):
     column_list = [c.name for c in Template.__table__.c] + [
         Template.groups,
         Template.fields,
+        Template.favorited_by_users,
     ]
     name = "Шаблон"
     name_plural = "Шаблоны"
@@ -77,22 +79,11 @@ class UserAdmin(ModelView, model=User):
         pass
 
 
-# class RoomsAdmin(ModelView, model=Rooms):
-#     column_list = [c.name for c in Rooms.__table__.c] + [
-#         Rooms.hotel,
-#         Rooms.bookings,
-#     ]
-#     column_labels = {
-#         Rooms.hotel: "Отель",
-#         Rooms.name: "Наименование",
-#         Rooms.price: "Цена",
-#         Rooms.description: "Описание",
-#         Rooms.services: "Доп.услуги",
-#         Rooms.quantity: "Количество",
-#     }
-#     name = "Номер"
-#     name_plural = "Номера"
-#     icon = "fa-solid fa-bed"
+class UserTemplateFavoriteAdmin(ModelView, model=UserTemplateFavorite):
+    column_list = "__all__"
+    name = "Избранный шаблон"
+    name_plural = "Избранные шаблоны"
+    icon = "fa-solid fa-person"
 
 
 def init_admin(app, engine):
@@ -104,3 +95,4 @@ def init_admin(app, engine):
     admin.add_view(TemplateFieldGroupAdmin)
     admin.add_view(TemplateAdmin)
     admin.add_view(UserAdmin)
+    admin.add_view(UserTemplateFavoriteAdmin)

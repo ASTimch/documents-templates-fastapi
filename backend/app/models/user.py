@@ -1,9 +1,13 @@
-from fastapi_users_db_sqlalchemy import (
-    SQLAlchemyBaseUserTable,
-)
-from sqlalchemy import String, Boolean
+from typing import TYPE_CHECKING
+from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
+from sqlalchemy import Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.template import Template
+from app.models.favorite import UserTemplateFavorite
 
 
 class User(SQLAlchemyBaseUserTable[int], Base):
@@ -26,6 +30,11 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     name: Mapped[str] = mapped_column(String(length=255), nullable=False)
     templates: Mapped[list["Template"]] = relationship(
         "Template", back_populates="owner"
+    )
+    favorite_templates: Mapped[list["Template"]] = relationship(
+        back_populates="favorited_by_users",
+        # secondary="user_template_favorite",
+        secondary=UserTemplateFavorite.__table__,
     )
 
     def __str__(self):

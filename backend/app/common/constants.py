@@ -33,3 +33,8 @@ class Messages:
 
     RENDER_ERROR: Final = "Непредвиденная ошибка при генерации документа"
     PDF_CONVERT_ERROR: Final = "Непредвиденная ошибка при генерации pdf"
+
+    FAVORITE_TEMPLATE_ALREADY_EXISTS: Final = (
+        "Шаблон уже содержится в избранном"
+    )
+    FAVORITE_TEMPLATE_DOES_NOT_EXISTS: Final = "Шаблон не найден в избранном"

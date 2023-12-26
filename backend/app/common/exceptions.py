@@ -45,3 +45,13 @@ class TemplateRenderErrorException(TemplateException):
 class TemplatePdfConvertErrorException(TemplateException):
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     detail = Messages.PDF_CONVERT_ERROR
+
+
+class UserTemplateFavoriteAlreadyExistsException(TemplateException):
+    status_code = status.HTTP_409_CONFLICT
+    detail = Messages.FAVORITE_TEMPLATE_ALREADY_EXISTS
+
+
+class UserTemplateFavoriteDoesNotExistsException(TemplateException):
+    status_code = status.HTTP_404_NOT_FOUND
+    detail = Messages.FAVORITE_TEMPLATE_DOES_NOT_EXISTS

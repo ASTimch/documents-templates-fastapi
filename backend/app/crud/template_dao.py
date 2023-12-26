@@ -6,6 +6,7 @@ from sqlalchemy.orm import joinedload, selectinload
 
 from app.crud.base_dao import BaseDAO
 from app.database import async_session_maker
+from app.models.favorite import UserTemplateFavorite
 
 # from app.hotels.schemas import SHotelRead
 from app.models.template import (
@@ -47,6 +48,7 @@ class TemplateDAO(BaseDAO):
                         TemplateField.type
                     )
                 )
+                .options(selectinload(Template.favorited_by_users))
             )
             result: Result = await session.execute(query)
             return result.unique().scalar_one_or_none()
@@ -62,3 +64,7 @@ class TemplateDAO(BaseDAO):
         #     )
         #     await session.execute(stmt)
         #     await session.commit()
+
+
+class UserTemplateFavoriteDAO(BaseDAO):
+    model = UserTemplateFavorite

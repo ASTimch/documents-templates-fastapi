@@ -1,21 +1,26 @@
 from datetime import datetime
-from typing import Optional
-from sqlalchemy import DateTime, ForeignKey, text, String
+from typing import TYPE_CHECKING, Optional
+
+from sqlalchemy import DateTime, ForeignKey, String, text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import (
     Base,
-    TimestampMixin,
-    str_50,
-    str_256,
-    storage_docx,
-    storage_thumbnail,
     FileType,
     ImageType,
+    TimestampMixin,
+    storage_docx,
+    storage_thumbnail,
+    str_50,
+    str_256,
 )
 
+# from app.models.favorite import UserTemplateFavorite
+
 # from fastapi_storages.integrations.sqlalchemy import FileType, ImageType
-from app.models.user import User
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+if TYPE_CHECKING:
+    from app.models.user import User
+from app.models.favorite import UserTemplateFavorite
 
 
 class Category(Base):
@@ -129,6 +134,12 @@ class Template(TimestampMixin, Base):
     )
     fields: Mapped[Optional[list["TemplateField"]]] = relationship(
         back_populates="template", order_by=TemplateField.id
+    )
+
+    favorited_by_users: Mapped[list["User"]] = relationship(
+        back_populates="favorite_templates",
+        # secondary="user_template_favorite"
+        secondary=UserTemplateFavorite.__table__,
     )
 
     def __str__(self):
