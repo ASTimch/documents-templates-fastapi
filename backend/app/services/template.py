@@ -1,13 +1,13 @@
+import logging
+import urllib
 from datetime import datetime
 from io import BytesIO
-import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import aiofiles
 import aiofiles.os
 from fastapi import Response, UploadFile
 from sqlalchemy import Sequence
-import urllib
 
 from app.common.constants import Messages
 from app.common.exceptions import (
@@ -32,6 +32,7 @@ from app.models.template import (
     TemplateFieldGroup,
     TemplateFieldType,
 )
+from app.models.user import User
 from app.schemas.template import (
     TemplateFieldTypeReadDTO,
     TemplateFieldTypeWriteDTO,
@@ -40,6 +41,7 @@ from app.schemas.template import (
     TemplateWriteDTO,
 )
 from app.services.docx_render import DocxRender
+from app.services.favorite import TemplateFavoriteService
 from app.services.pdf_converter import PdfConverter
 from app.services.template_field_type import TemplateFieldTypeService
 
@@ -109,7 +111,9 @@ class TemplateService:
         return obj
 
     @classmethod
-    async def get(cls, *, id: int) -> Optional[TemplateReadDTO]:
+    async def get(
+        cls, *, id: int, user: Optional[User] = None
+    ) -> Optional[TemplateReadDTO]:
         obj = await cls.get_or_raise_not_found(id)
         groups_dicts = {group.id: group.to_dict() for group in obj.groups}
         ungrouped_fields = []
@@ -127,6 +131,11 @@ class TemplateService:
         obj_dict = obj.to_dict()
         obj_dict["grouped_fields"] = groups_dicts.values()
         obj_dict["ungrouped_fields"] = ungrouped_fields
+        # формирование is_favorited
+        if user:
+            obj_dict[
+                "is_favorited"
+            ] = await TemplateFavoriteService.is_favorited(user.id, obj.id)
         return TemplateReadDTO.model_validate(obj_dict)
 
     # @classmethod
@@ -137,16 +146,23 @@ class TemplateService:
 
     @classmethod
     async def get_all(
-        cls, include_deleted=False
+        cls, include_deleted=False, user: Optional[User] = None
     ) -> Sequence[TemplateReadMinifiedDTO]:
         """Получить все шаблоны в сокращенном виде (без описания полей)"""
         if include_deleted:
             obj_sequence = await TemplateDAO.get_all()
         else:
             obj_sequence = await TemplateDAO.get_all(deleted=False)
-        obj_dto_list = [
-            TemplateReadMinifiedDTO.model_validate(obj) for obj in obj_sequence
-        ]
+        obj_dto_list = []
+        for obj in obj_sequence:
+            obj_dto = TemplateReadMinifiedDTO.model_validate(obj)
+            if user:
+                obj_dto.is_favorited = (
+                    await TemplateFavoriteService.is_favorited(user.id, obj.id)
+                )
+
+            obj_dto_list.append(obj_dto)
+
         return obj_dto_list
 
     # @classmethod

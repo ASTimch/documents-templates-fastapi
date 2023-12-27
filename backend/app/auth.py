@@ -87,5 +87,6 @@ fastapi_users = FastAPIUsers[User, int](
     [auth_backend],
 )
 
+current_user_or_none = fastapi_users.current_user(optional=True)
 current_active_user = fastapi_users.current_user(active=True)
 current_superuser = fastapi_users.current_user(active=True, superuser=True)

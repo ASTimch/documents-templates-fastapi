@@ -1,3 +1,4 @@
+import sys
 import urllib
 import asyncio
 import json
@@ -56,7 +57,7 @@ async def prepare_database():
                 )
         await session.commit()
 
-    yield
+    # yield
     # удаление всех таблиц после тестов в БД
     # async with engine.begin() as conn:
     #     await conn.run_sync(Base.metadata.drop_all)
@@ -71,28 +72,20 @@ async def prepare_database():
 #     loop.close()
 
 
-@pytest.fixture(scope="module")
+# @pytest.yield_fixture
+@pytest.fixture
 def event_loop():
-    # loop = asyncio.get_event_loop()
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    pending = asyncio.tasks.all_tasks(loop)
-    loop.run_until_complete(asyncio.gather(*pending))
-    loop.run_until_complete(asyncio.sleep(1))
-    loop.close()
-
-
-# Взято из документации к pytest-asyncio
-# @pytest.fixture(scope="session")
-# def event_loop(request):
-#     """Create an instance of the default event loop for each test case."""
-#     # if sys.platform == "win32" and sys.version_info.minor >= 8:
-#     #     asyncio.set_event_loop_policy(
-#     #         asyncio.WindowsSelectorEventLoopPolicy()  # pylint: disable=no-member
-#     #     )
-#     # loop = asyncio.get_event_loop_policy().new_event_loop()
-#     # yield loop
-#     # loop.close()
+    """Create an instance of the default event loop for each test case."""
+    if sys.platform == "win32" and sys.version_info.minor >= 8:
+        policy = asyncio.WindowsSelectorEventLoopPolicy()
+    else:
+        policy = asyncio.get_event_loop_policy()
+    res = policy.new_event_loop()
+    asyncio.set_event_loop(res)
+    res._close = res.close
+    res.close = lambda: None
+    yield res
+    res._close()
 
 
 # Фикстура асинхронного клиента для каждого из тестов
@@ -100,6 +93,8 @@ def event_loop():
 async def ac() -> AsyncIterator[AsyncClient]:
     async with AsyncClient(app=app, base_url="http://test") as ac:
         yield ac
+    # await asyncio.sleep(0.250)
+    # await ac.close()
 
 
 # Фикстура аутентифицированного клиента для каждого из тестов
@@ -118,6 +113,7 @@ async def user_ac() -> AsyncIterator[AsyncClient]:
         assert jwt, "Куки авторизованного клиента не найдены"
         ac.headers["Cookie"] = f"{AUTH_COOKIE}={jwt}"
         yield ac
+    # await asyncio.sleep(0.250)
     # await ac.close()
 
 
@@ -137,3 +133,5 @@ async def superuser_ac() -> AsyncIterator[AsyncClient]:
         assert jwt, "Куки авторизованного суперпользователя не найдены"
         ac.headers["Cookie"] = f"{AUTH_COOKIE}={jwt}"
         yield ac
+    # await asyncio.sleep(0.250)
+    # await ac.close()

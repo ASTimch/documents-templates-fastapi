@@ -4,7 +4,11 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Response, UploadFile, status
 from fastapi.responses import FileResponse, JSONResponse
 
-from app.auth import current_superuser, current_active_user
+from app.auth import (
+    current_superuser,
+    current_active_user,
+    current_user_or_none,
+)
 from app.models.user import User
 from app.schemas.template import (
     TemplateFieldReadDTO,
@@ -20,14 +24,20 @@ router = APIRouter()
 
 
 @router.get("/", summary="Получить все доступные шаблоны")
-async def get_all_templates() -> Optional[list[TemplateReadMinifiedDTO]]:
-    templates = await TemplateService.get_all()
+async def get_all_templates(
+    user: Optional[User] = Depends(current_user_or_none),
+) -> Optional[list[TemplateReadMinifiedDTO]]:
+    print("get_templates!!!")
+    templates = await TemplateService.get_all(user=user)
     return templates
 
 
 @router.get("/{template_id}", summary="Шаблон с заданным template_id")
-async def get_template_by_id(template_id: int) -> Optional[TemplateReadDTO]:
-    template = await TemplateService.get(id=template_id)
+async def get_template_by_id(
+    template_id: int,
+    user: Optional[User] = Depends(current_user_or_none),
+) -> Optional[TemplateReadDTO]:
+    template = await TemplateService.get(id=template_id, user=user)
     return template
 
 

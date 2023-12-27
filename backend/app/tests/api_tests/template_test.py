@@ -1,8 +1,9 @@
-import json
 from typing import Any, Optional
 from httpx import AsyncClient
 import pytest
 from app.config import settings
+from app.schemas.template import TemplateWriteDTO
+from app.services.template import TemplateService
 from app.tests.fixtures import templates_for_write, templates_for_read
 
 
@@ -23,7 +24,7 @@ class TestTemplateApiV1:
             else:
                 assert dct1[key1] == dct2[key2]
 
-    @pytest.mark.parametrize("write_data", templates_for_write[0])
+    @pytest.mark.parametrize("write_data", [templates_for_write[0]])
     async def test_post_delete_for_anauthorized(
         self, route, ac: AsyncClient, write_data
     ):
@@ -35,7 +36,15 @@ class TestTemplateApiV1:
         response = await ac.delete(route + "1")
         assert response.status_code == 401
 
-    @pytest.mark.parametrize("write_data", templates_for_write[0])
+        # добавление в избранное
+        response = await ac.post(route + "1/favorite/")
+        assert response.status_code == 401
+
+        # удаление из избранного
+        response = await ac.delete(route + "1/favorite/")
+        assert response.status_code == 401
+
+    @pytest.mark.parametrize("write_data", [templates_for_write[0]])
     async def test_post_delete_for_regular_user(
         self, route, user_ac: AsyncClient, write_data
     ):
@@ -46,6 +55,35 @@ class TestTemplateApiV1:
         # удаление шаблона
         response = await user_ac.delete(route + "1")
         assert response.status_code == 403
+
+    @pytest.mark.parametrize("write_data", [templates_for_write[0]])
+    async def test_favorite_for_regular_user(
+        self, route, user_ac: AsyncClient, write_data
+    ):
+        template_dto = TemplateWriteDTO.model_validate(write_data)
+        template_id = await TemplateService.add(template_dto)
+
+        # добавление в избранное
+        response = await user_ac.post(route + f"{template_id}/favorite/")
+        assert response.status_code == 201
+
+        # повторное добавление в избранное
+        response = await user_ac.post(route + f"{template_id}/favorite/")
+        assert response.status_code == 409
+
+        # удаление из избранного
+        response = await user_ac.delete(route + f"{template_id}/favorite/")
+        assert response.status_code == 204
+
+        # повторное удаление из избранного
+        response = await user_ac.delete(route + f"{template_id}/favorite/")
+        assert response.status_code == 404
+
+        # удаление из избранного отсутствующего шаблона
+        response = await user_ac.delete(route + f"{template_id}/favorite/")
+        assert response.status_code == 404
+
+        await TemplateService.delete(template_id)
 
     @pytest.mark.parametrize(
         "write_data, read_data", zip(templates_for_write, templates_for_read)
