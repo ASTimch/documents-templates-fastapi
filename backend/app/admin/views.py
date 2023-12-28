@@ -1,4 +1,5 @@
 from sqladmin import Admin, ModelView
+from app.models.document import Document, DocumentField
 from app.models.template import (
     TemplateField,
     TemplateFieldGroup,
@@ -86,6 +87,35 @@ class UserTemplateFavoriteAdmin(ModelView, model=UserTemplateFavorite):
     icon = "fa-solid fa-person"
 
 
+class DocumentFieldAdmin(ModelView, model=DocumentField):
+    column_list = "__all__"
+    # column_list = [c.name for c in DocumentField.__table__.c]
+    # column_labels = {
+    #     TemplateField.tag: "Тэг",
+    #     TemplateField.name: "Наименование",
+    #     TemplateField.hint: "Подсказка",
+    #     TemplateField.default: "Значение по умолчанию",
+    #     TemplateField.length: "Размер",
+    #     TemplateField.type: "Тип",
+    #     TemplateField.group: "Группа",
+    #     TemplateField.template: "Шаблон",
+    # }
+    name = "Поле док"
+    name_plural = "Поля док"
+
+
+class DocumentAdmin(ModelView, model=Document):
+    column_list = "__all__"
+    name = "Документ"
+    name_plural = "Документ"
+    # icon = "fa-solid fa-hotel"
+
+    async def on_model_delete(self, model):
+        # Perform some other action
+        # delete docx template and thumbnail if exists
+        pass
+
+
 def init_admin(app, engine):
     # admin = Admin(app, engine, authentication_backend=authentication_backend)
     admin = Admin(app, engine)
@@ -96,3 +126,5 @@ def init_admin(app, engine):
     admin.add_view(TemplateAdmin)
     admin.add_view(UserAdmin)
     admin.add_view(UserTemplateFavoriteAdmin)
+    admin.add_view(DocumentFieldAdmin)
+    admin.add_view(DocumentAdmin)

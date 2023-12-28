@@ -4,6 +4,7 @@ from sqlalchemy import Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+from app.models.document import Document
 
 if TYPE_CHECKING:
     from app.models.template import Template
@@ -35,6 +36,9 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         back_populates="favorited_by_users",
         # secondary="user_template_favorite",
         secondary=UserTemplateFavorite.__table__,
+    )
+    documents: Mapped[list["Document"]] = relationship(
+        "Document", back_populates="owner"
     )
 
     def __str__(self):

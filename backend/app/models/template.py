@@ -100,7 +100,7 @@ class TemplateField(Base):
     template: Mapped["Template"] = relationship(back_populates="fields")
 
     def __str__(self):
-        return f"{self.id}: {self.name}"
+        return f"{self.template_id}: {self.id}: {self.name}"
 
     # """Запрет назначения группы, привязанной к другому шаблону."""
     # if self.group and self.group.template != self.template:
