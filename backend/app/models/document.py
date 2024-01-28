@@ -38,7 +38,6 @@ class Document(TimestampMixin, Base):
         ForeignKey("user.id", ondelete="CASCADE")
     )
     completed: Mapped[bool] = mapped_column(default=False)
-
     template: Mapped["Template"] = relationship("Template")
     owner: Mapped["User"] = relationship("User", back_populates="documents")
     fields: Mapped[list["DocumentField"]] = relationship(
