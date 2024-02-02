@@ -1,6 +1,5 @@
 import logging
 import urllib
-from datetime import datetime
 from io import BytesIO
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -46,15 +45,22 @@ from app.services.favorite import TemplateFavoriteService
 from app.services.pdf_converter import PdfConverter
 from app.services.template_field_type import TemplateFieldTypeService
 
-DOCX_FILENAME_FORMAT = "tpl_{id}.docx"
-THUMBNAIL_FILENAME_FORMAT = "thumbnail_{id}.png"
-DRAFT_FILENAME_FORMAT = "{name}_шаблон.{ext}"
-PREVIEW_FILENAME_FORMAT = "{name}_preview.{ext}"
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s, %(levelname)s, %(message)s",
+)
 
 logger = logging.getLogger(__name__)
 
 
 class TemplateService:
+    DOCX_FILENAME_FORMAT = "tpl_{id}.docx"
+    THUMBNAIL_FILENAME_FORMAT = "thumbnail_{id}.png"
+    DRAFT_FILENAME_FORMAT = "{name}_шаблон.{ext}"
+    PREVIEW_FILENAME_FORMAT = "{name}_preview.{ext}"
+    THUMBNAIL_WIDTH = 300
+    THUMBNAIL_HEIGHT = 300
+
     @classmethod
     def _update_fields_type_by_id(
         cls, fields: list[dict[str, Any]], type_id_mapping: dict[str:int]
@@ -180,10 +186,10 @@ class TemplateService:
     #         return count
 
     @classmethod
-    async def update_docx_template(cls, id: int, file: UploadFile) -> None:
+    async def update_docx_template(cls, id: idpk, file: UploadFile) -> None:
         obj_db = await cls.get_or_raise_not_found(id)
         # force change file name to proper format tpl_<id>.docx
-        file.filename = DOCX_FILENAME_FORMAT.format(id=obj_db.id)
+        file.filename = cls.DOCX_FILENAME_FORMAT.format(id=obj_db.id)
         if obj_db.filename and obj_db.filename.name != file.filename:
             # delete old file if it has a different name
             await aiofiles.os.remove(obj_db.filename.path)
@@ -197,8 +203,33 @@ class TemplateService:
         # await TemplateDAO.update_(obj_db.id, filename=docx_file_name)
 
     @classmethod
-    async def generate_thumbnail():
-        pass
+    async def generate_thumbnail(cls, template_id: idpk):
+        """Генерирует png thumbnail для шаблона документа.
+
+        После генерации обновляет поле thumbnail шаблона в базе данных.
+
+        Args:
+            template_id (int): идентификатор шаблона
+        """
+        obj_db = await cls.get_or_raise_not_found(template_id)
+        pdf_buffer, _ = await TemplateService.get_draft(template_id, pdf=True)
+        png_buffer = PdfConverter.pdf_to_thumbnail(
+            pdf_buffer,
+            width=cls.THUMBNAIL_WIDTH,
+            height=cls.THUMBNAIL_HEIGHT,
+            format="png",
+        )
+        filename = cls.THUMBNAIL_FILENAME_FORMAT.format(id=template_id)
+        try:
+            thumb_file = UploadFile(
+                file=png_buffer,
+                filename=filename,
+                headers={"content-type": "image/png"},
+            )
+            await TemplateDAO.update_(obj_db.id, thumbnail=thumb_file)
+            logger.info(f"New thumbnail generated: {filename}")
+        except Exception as e:
+            logger.exception(e)
 
     @classmethod
     async def delete(cls, id: idpk) -> int:
@@ -294,11 +325,11 @@ class TemplateService:
             print(e)  # TODO: log exception
             logger.exception(e)
             raise TemplateRenderErrorException
-        filename = DRAFT_FILENAME_FORMAT.format(name=tpl.title, ext="docx")
+        filename = cls.DRAFT_FILENAME_FORMAT.format(name=tpl.title, ext="docx")
         if pdf:
             try:
                 buffer = PdfConverter.docx_to_pdf(buffer)
-                filename = DRAFT_FILENAME_FORMAT.format(
+                filename = cls.DRAFT_FILENAME_FORMAT.format(
                     name=tpl.title, ext="pdf"
                 )
             except Exception as e:
@@ -342,11 +373,13 @@ class TemplateService:
             print(e)
             logger.exception("DocxRender conversion failed")
             raise TemplateRenderErrorException
-        filename = PREVIEW_FILENAME_FORMAT.format(name=tpl.title, ext="docx")
+        filename = cls.PREVIEW_FILENAME_FORMAT.format(
+            name=tpl.title, ext="docx"
+        )
         if pdf:
             try:
                 buffer = PdfConverter.docx_to_pdf(buffer)
-                filename = PREVIEW_FILENAME_FORMAT.format(
+                filename = cls.PREVIEW_FILENAME_FORMAT.format(
                     name=tpl.title, ext="pdf"
                 )
             except Exception as e:

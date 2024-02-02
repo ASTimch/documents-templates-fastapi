@@ -121,4 +121,5 @@ class PdfConverter:
             # pil_image.show()
             pil_image.save(out_buffer, format=format)
             print("thumbnail сгенерирован")
+            out_buffer.seek(0)
         return out_buffer

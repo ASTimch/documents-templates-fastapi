@@ -58,7 +58,7 @@ async def upload_docx_template(
     template_id: int, file: UploadFile, user: User = Depends(current_superuser)
 ):
     await TemplateService.update_docx_template(template_id, file)
-    # await
+    # TODO добавить фоновую задачу для генерации новой картинки thumbnail
 
 
 @router.post(
@@ -116,6 +116,15 @@ async def get_thumbnail(template_id: int) -> FileResponse:
     png_buffer = PdfConverter.pdf_to_thumbnail(pdf_buffer, 250, 250, "png")
     response = Response(content=png_buffer.getvalue(), media_type="image/png")
     return response
+
+
+@router.get(
+    "/{template_id}/generate_thumbnail",
+    summary="сгенерировать картинку",
+    status_code=status.HTTP_200_OK,
+)
+async def generate_thumbnail(template_id: int):
+    await TemplateService.generate_thumbnail(template_id)
 
 
 @router.post(
