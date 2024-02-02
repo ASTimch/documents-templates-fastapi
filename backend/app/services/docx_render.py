@@ -25,10 +25,10 @@ class CustomFilters:
     def _skip_filter(self, tag: str) -> Tuple[bool, Any]:
         """Проверяет, нужно ли отключить/пропустить фильтр.
 
-        :returns:
-        (skip, value)
-        skip: bool =True, если фильтр должен быть отключен
-        value: значение возвращаемое вместо значения s
+        Returns:
+            (skip, value)
+            skip (bool): True, если фильтр должен быть отключен
+            value (str): значение возвращаемое вместо значения тега
         """
         if (
             not self._enabled
@@ -365,73 +365,71 @@ class DocxRender:
                 r.font.highlight_color = color
 
 
-if __name__ == "__main__":
-    pass
-    # # Примеры использования
-    # path = "D:\\Dev\\document-template\\backend\\backend\\data\\"
-    # template_file_name = "заявление_на_отпуск_tpl.docx"
-    # draft_file_name = "заявление_на_отпуск_draft.docx"
-    # final_file_name = "заявление_на_отпуск_final.docx"
-    # partial_file_name = "заявление_на_отпуск_partial.docx"
+# # Примеры использования
+# path = "\\backend\\data\\"
+# template_file_name = "заявление_на_отпуск_tpl.docx"
+# draft_file_name = "заявление_на_отпуск_draft.docx"
+# final_file_name = "заявление_на_отпуск_final.docx"
+# partial_file_name = "заявление_на_отпуск_partial.docx"
 
-    # # Контекст для эскиза: словарь вида {field.tag: field.name}
-    # context_draft = {
-    #     "РаботодательНаименованиеОрганизации": "Наименование организации",
-    #     "дата": "дата",
-    #     "РаботодательДолжность": "Должность руководителя",
-    #     "РаботодательФИО": "ФИО руководителя",
-    #     "РаботникФИО": "ФИО",
-    #     "продолжительность": "продолжительность",
-    #     "датаНачала": "дата начала",
-    #     "РаботникДолжность": "должность заявителя",
-    #     "отпускные": "размер отпускных",
-    # }
+# # Контекст для эскиза: словарь вида {field.tag: field.name}
+# context_draft = {
+#     "РаботодательНаименованиеОрганизации": "Наименование организации",
+#     "дата": "дата",
+#     "РаботодательДолжность": "Должность руководителя",
+#     "РаботодательФИО": "ФИО руководителя",
+#     "РаботникФИО": "ФИО",
+#     "продолжительность": "продолжительность",
+#     "датаНачала": "дата начала",
+#     "РаботникДолжность": "должность заявителя",
+#     "отпускные": "размер отпускных",
+# }
 
-    # # Контекст для документа: словарь вида {field.tag: field.value}
-    # context_doc = {
-    #     "РаботодательДолжность": "генеральный директор",
-    #     "РаботодательНаименованиеОрганизации": '"ООО "Рога и копыта"',
-    #     "РаботодательФИО": "рогов федор федорович",
-    #     "РаботникФИО": "иванов иван иванович",
-    #     "продолжительность": "14",
-    #     "датаНачала": "23.10.2023",
-    #     "РаботникДолжность": "старший рогополировальщик",
-    #     "дата": "16.10.2023",
-    #     "отпускные": 5021.00,
-    # }
+# # Контекст для документа: словарь вида {field.tag: field.value}
+# context_doc = {
+#     "РаботодательДолжность": "генеральный директор",
+#     "РаботодательНаименованиеОрганизации": '"ООО "Рога и копыта"',
+#     "РаботодательФИО": "рогов федор федорович",
+#     "РаботникФИО": "иванов иван иванович",
+#     "продолжительность": "14",
+#     "датаНачала": "23.10.2023",
+#     "РаботникДолжность": "старший рогополировальщик",
+#     "дата": "16.10.2023",
+#     "отпускные": 5021.00,
+# }
 
-    # # Контекст для документа: словарь вида {field.tag: field.value}
-    # context_partial = {
-    #     # "РаботодательДолжность": "генеральный директор",
-    #     # "РаботодательНаименованиеОрганизации": '"ООО "Рога и копыта"',
-    #     # "РаботодательФИО": "рогов федор федорович",
-    #     # "РаботникФИО": "иванов иван иванович",
-    #     # "продолжительность": "14",
-    #     # "датаНачала": "23.10.2023",
-    #     # "РаботникДолжность": "старший рогополировальщик",
-    #     # "дата": "16.10.2023",
-    #     # "отпускные": 5000,
-    #     # "garbage": "garbage_value",
-    # }
+# # Контекст для документа: словарь вида {field.tag: field.value}
+# context_partial = {
+#     # "РаботодательДолжность": "генеральный директор",
+#     # "РаботодательНаименованиеОрганизации": '"ООО "Рога и копыта"',
+#     # "РаботодательФИО": "рогов федор федорович",
+#     # "РаботникФИО": "иванов иван иванович",
+#     # "продолжительность": "14",
+#     # "датаНачала": "23.10.2023",
+#     # "РаботникДолжность": "старший рогополировальщик",
+#     # "дата": "16.10.2023",
+#     # "отпускные": 5000,
+#     # "garbage": "garbage_value",
+# }
 
-    # # получение всех тэгов из шаблона
-    # tpl = DocumentTemplate(path + "Заявление_на_отпуск_tpl.docx")
-    # print(tpl.get_tags())
+# # получение всех тэгов из шаблона
+# tpl = DocumentTemplate(path + "Заявление_на_отпуск_tpl.docx")
+# print(tpl.get_tags())
 
-    # # Получение Эскиза
-    # tpl = DocumentTemplate(path + template_file_name)
-    # fs = tpl.get_draft(context_draft)
-    # with open(path + draft_file_name, "wb") as outfile:
-    #     outfile.write(fs.getbuffer())
+# # Получение Эскиза
+# tpl = DocumentTemplate(path + template_file_name)
+# fs = tpl.get_draft(context_draft)
+# with open(path + draft_file_name, "wb") as outfile:
+#     outfile.write(fs.getbuffer())
 
-    # # # Генерация документа по заданному контексту значений полей
-    # tpl = DocumentTemplate(path + template_file_name)
-    # fs = tpl.get_document(context_doc)
-    # with open(path + final_file_name, "wb") as outfile:
-    #     outfile.write(fs.getbuffer())
+# # # Генерация документа по заданному контексту значений полей
+# tpl = DocumentTemplate(path + template_file_name)
+# fs = tpl.get_document(context_doc)
+# with open(path + final_file_name, "wb") as outfile:
+#     outfile.write(fs.getbuffer())
 
-    # # Получение preview - недозаполненного документа
-    # tpl = DocumentTemplate(path + template_file_name)
-    # fs = tpl.get_partial(context_partial, context_draft)
-    # with open(path + partial_file_name, "wb") as outfile:
-    #     outfile.write(fs.getbuffer())
+# # Получение preview - недозаполненного документа
+# tpl = DocumentTemplate(path + template_file_name)
+# fs = tpl.get_partial(context_partial, context_draft)
+# with open(path + partial_file_name, "wb") as outfile:
+#     outfile.write(fs.getbuffer())

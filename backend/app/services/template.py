@@ -26,6 +26,7 @@ from app.crud.template_dao import (
     TemplateFieldTypeDAO,
 )
 from app.database import async_session_maker, idpk
+from app.models.base import storage_docx
 from app.models.template import (
     Template,
     TemplateField,
@@ -44,6 +45,13 @@ from app.services.docx_render import DocxRender
 from app.services.favorite import TemplateFavoriteService
 from app.services.pdf_converter import PdfConverter
 from app.services.template_field_type import TemplateFieldTypeService
+
+DOCX_FILENAME_FORMAT = "tpl_{id}.docx"
+THUMBNAIL_FILENAME_FORMAT = "thumbnail_{id}.png"
+DRAFT_FILENAME_FORMAT = "{name}_шаблон.{ext}"
+PREVIEW_FILENAME_FORMAT = "{name}_preview.{ext}"
+
+logger = logging.getLogger(__name__)
 
 
 class TemplateService:
@@ -133,9 +141,9 @@ class TemplateService:
         obj_dict["ungrouped_fields"] = ungrouped_fields
         # формирование is_favorited
         if user:
-            obj_dict[
-                "is_favorited"
-            ] = await TemplateFavoriteService.is_favorited(user.id, obj.id)
+            obj_dict["is_favorited"] = (
+                await TemplateFavoriteService.is_favorited(user.id, obj.id)
+            )
         return TemplateReadDTO.model_validate(obj_dict)
 
     # @classmethod
@@ -175,9 +183,9 @@ class TemplateService:
     async def update_docx_template(cls, id: int, file: UploadFile) -> None:
         obj_db = await cls.get_or_raise_not_found(id)
         # force change file name to proper format tpl_<id>.docx
-        file.filename = f"tpl_{obj_db.id}.docx"
+        file.filename = DOCX_FILENAME_FORMAT.format(id=obj_db.id)
         if obj_db.filename and obj_db.filename.name != file.filename:
-            # delete old file if it has different name
+            # delete old file if it has a different name
             await aiofiles.os.remove(obj_db.filename.path)
         await TemplateDAO.update_(obj_db.id, filename=file)
 
@@ -187,6 +195,10 @@ class TemplateService:
         #     while content := await file.read(1024):
         #         await out_file.write(content)
         # await TemplateDAO.update_(obj_db.id, filename=docx_file_name)
+
+    @classmethod
+    async def generate_thumbnail():
+        pass
 
     @classmethod
     async def delete(cls, id: idpk) -> int:
@@ -218,6 +230,7 @@ class TemplateService:
                 docx_tags = set(doc.get_tags())
             except Exception as e:
                 print(e)  # TODO: add logging
+                logger.exception(e)
 
         field_tags = {field.tag for field in tpl.fields}
         excess_tags = tuple(docx_tags - field_tags)
@@ -273,21 +286,24 @@ class TemplateService:
 
         tpl = await cls.get_or_raise_not_found(id)
         context = {field.tag: field.name for field in tpl.fields}
-        docx_path = tpl.filename
+        docx_path = tpl.filename.path
         try:
             doc = DocxRender(docx_path)
             buffer = doc.get_draft(context)
         except Exception as e:
             print(e)  # TODO: log exception
+            logger.exception(e)
             raise TemplateRenderErrorException
-        filename = f"{tpl.title}_шаблон.docx"
+        filename = DRAFT_FILENAME_FORMAT.format(name=tpl.title, ext="docx")
         if pdf:
             try:
                 buffer = PdfConverter.docx_to_pdf(buffer)
-                filename = f"{tpl.title}_шаблон.pdf"
+                filename = DRAFT_FILENAME_FORMAT.format(
+                    name=tpl.title, ext="pdf"
+                )
             except Exception as e:
                 print(e)
-                logging.exception("PDF conversion failed")
+                logger.exception("PDF conversion failed")
                 raise TemplatePdfConvertErrorException
         return buffer, filename
 
@@ -324,13 +340,15 @@ class TemplateService:
             buffer = doc.get_partial(context, context_default)
         except Exception as e:
             print(e)
-            logging.exception("DocxRender conversion failed")
+            logger.exception("DocxRender conversion failed")
             raise TemplateRenderErrorException
-        filename = f"{tpl.title}_preview.docx"
+        filename = PREVIEW_FILENAME_FORMAT.format(name=tpl.title, ext="docx")
         if pdf:
             try:
                 buffer = PdfConverter.docx_to_pdf(buffer)
-                filename = f"{tpl.title}_preview.pdf"
+                filename = PREVIEW_FILENAME_FORMAT.format(
+                    name=tpl.title, ext="pdf"
+                )
             except Exception as e:
                 print(e)
                 logging.exception("PDF conversion failed")

@@ -18,6 +18,7 @@ from app.schemas.template import (
     TemplateWriteDTO,
 )
 from app.services.favorite import TemplateFavoriteService
+from app.services.pdf_converter import PdfConverter
 from app.services.template import TemplateService
 
 router = APIRouter()
@@ -57,6 +58,7 @@ async def upload_docx_template(
     template_id: int, file: UploadFile, user: User = Depends(current_superuser)
 ):
     await TemplateService.update_docx_template(template_id, file)
+    # await
 
 
 @router.post(
@@ -101,6 +103,18 @@ async def check_consistency(
 async def get_draft(template_id: int, pdf: bool = False) -> FileResponse:
     file, filename = await TemplateService.get_draft(template_id, pdf)
     response = await TemplateService.get_file_response(file, filename, pdf)
+    return response
+
+
+@router.get(
+    "/{template_id}/get_thumbnail",
+    summary="Получить/сгенерировать картинку",
+    status_code=status.HTTP_200_OK,
+)
+async def get_thumbnail(template_id: int) -> FileResponse:
+    pdf_buffer, _ = await TemplateService.get_draft(template_id, pdf=True)
+    png_buffer = PdfConverter.pdf_to_thumbnail(pdf_buffer, 250, 250, "png")
+    response = Response(content=png_buffer.getvalue(), media_type="image/png")
     return response
 
 

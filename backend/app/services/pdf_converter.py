@@ -1,11 +1,13 @@
-from io import BytesIO
 import pathlib
 import subprocess
 import sys
 import tempfile
+from io import BytesIO
 from typing import Optional
+from PIL.Image import Image
 
 from fastapi import logger
+from pdf2image import convert_from_bytes
 
 from app.common.exceptions import TemplatePdfConvertErrorException
 
@@ -74,6 +76,49 @@ class PdfConverter:
     def docx_to_pdf(cls, in_file: BytesIO) -> BytesIO:
         if sys.platform == "win32":
             return cls._docx_to_pdf_win32(in_file)
-        elif sys.platform == "linux":
+        if sys.platform == "linux":
             return cls._docx_to_pdf_linux(in_file)
         raise TemplatePdfConvertErrorException
+
+    @classmethod
+    def pdf_to_pil_thumbnail(
+        cls, pdf_file: BytesIO, width: int, height: int
+    ) -> Image:
+        """Генерирует превью для заданного pdf файла.
+
+        Args:
+            pdf_file (BytesIO): исходный файл pdf
+            width (int), height (int): размеры результирующей картинки
+        Returns:
+            PIL.Image.Image заданных размеров
+        """
+        images = convert_from_bytes(
+            pdf_file.getvalue(),
+            dpi=200,
+            last_page=1,
+            use_cropbox=True,
+            size=(width, None),
+        )
+        if images:
+            return images[0].crop((0, 0, width, height))
+
+    @classmethod
+    def pdf_to_thumbnail(
+        cls, pdf_file: BytesIO, width: int, height: int, format: str
+    ) -> BytesIO:
+        """Генерирует превью для заданного pdf файла в заданном формате.
+
+        Args:
+            pdf_file (BytesIO): исходный файл pdf.
+            width (int), height (int): размеры результирующей картинки.
+            format (str): заданный формат результата (png, jpeg, tiff, ppm).
+        Returns:
+            (BytesIO): превью заданных размеров в формате png.
+        """
+        out_buffer = BytesIO()
+        pil_image = cls.pdf_to_pil_thumbnail(pdf_file, width, height)
+        if pil_image:
+            # pil_image.show()
+            pil_image.save(out_buffer, format=format)
+            print("thumbnail сгенерирован")
+        return out_buffer

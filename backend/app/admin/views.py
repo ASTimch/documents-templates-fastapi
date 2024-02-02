@@ -88,6 +88,12 @@ class UserTemplateFavoriteAdmin(ModelView, model=UserTemplateFavorite):
 
 
 class DocumentFieldAdmin(ModelView, model=DocumentField):
+    form_ajax_refs = {
+        "template_field": {
+            "fields": ("id",),
+            "order_by": "id",
+        }
+    }
     column_list = "__all__"
     # column_list = [c.name for c in DocumentField.__table__.c]
     # column_labels = {
