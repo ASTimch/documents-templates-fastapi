@@ -20,6 +20,7 @@ from app.schemas.template import (
 from app.services.favorite import TemplateFavoriteService
 from app.services.pdf_converter import PdfConverter
 from app.services.template import TemplateService
+from app.tasks.tasks import generate_template_thumbnail
 
 router = APIRouter()
 
@@ -58,7 +59,8 @@ async def upload_docx_template(
     template_id: int, file: UploadFile, user: User = Depends(current_superuser)
 ):
     await TemplateService.update_docx_template(template_id, file)
-    # TODO добавить фоновую задачу для генерации новой картинки thumbnail
+    # Запуск фоновой задачи для генерации новой картинки thumbnail
+    generate_template_thumbnail.delay(template_id)
 
 
 @router.post(
@@ -120,7 +122,7 @@ async def get_thumbnail(template_id: int) -> FileResponse:
 
 @router.get(
     "/{template_id}/generate_thumbnail",
-    summary="сгенерировать картинку",
+    summary="Сгенерировать картинку thumbnail",
     status_code=status.HTTP_200_OK,
 )
 async def generate_thumbnail(template_id: int):

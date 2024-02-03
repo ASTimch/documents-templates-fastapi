@@ -15,7 +15,8 @@ if settings.MODE == "TEST":
     # DATABASE_PARAMS = {}
 else:
     DATABASE_URL = settings.DATABASE_URL
-    DATABASE_PARAMS = {}
+    DATABASE_PARAMS = {"poolclass": NullPool}  # for celery background
+    # DATABASE_PARAMS = {}
 
 engine = create_async_engine(DATABASE_URL, **DATABASE_PARAMS)
 

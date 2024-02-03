@@ -4,10 +4,10 @@ import sys
 import tempfile
 from io import BytesIO
 from typing import Optional
-from PIL.Image import Image
 
 from fastapi import logger
 from pdf2image import convert_from_bytes
+from PIL.Image import Image
 
 from app.common.exceptions import TemplatePdfConvertErrorException
 
@@ -15,13 +15,22 @@ from app.common.exceptions import TemplatePdfConvertErrorException
 class PdfConverter:
     @classmethod
     def _docx_to_pdf_win32(cls, in_file: BytesIO) -> Optional[BytesIO]:
-        """Файл в виде строки байт преобразуем в строку байт pdf-файла."""
+        """Конвертирует docx файл pdf-файла на платформах win32.
+
+        Args:
+            in_file (ByresIO): содержимое входного docx файла.
+
+        Returns:
+            BytesIO: результирующий файл в формате pdf.
+
+        Raises:
+            TemplatePdfConvertErrorException: при ошибках конвертации.
+        """
         import win32com.client
 
         with tempfile.NamedTemporaryFile(delete=False) as output:
             docx_file = pathlib.Path(output.name).resolve()
             output.write(in_file.read())
-        # docx_file.write_bytes(in_file.read())
         try:
             word = win32com.client.Dispatch("Word.Application")
             wdFormatPDF = 17
@@ -31,8 +40,8 @@ class PdfConverter:
             doc.Close(0)
         except Exception as e:
             docx_file.unlink(missing_ok=True)
-            logger.exception("msoffice conversion failed")
-            raise TemplatePdfConvertErrorException
+            logger.exception(e)
+            raise TemplatePdfConvertErrorException()
         out_buffer = BytesIO()
         out_buffer.write(pdf_file.read_bytes())
         out_buffer.seek(0)
@@ -42,8 +51,19 @@ class PdfConverter:
 
     @classmethod
     def _docx_to_pdf_linux(cls, in_file: BytesIO) -> Optional[BytesIO]:
-        """Файл в виде строки байт преобразуем в строку байт pdf-файла."""
+        """Конвертирует docx файл pdf-файла на платформах linux.
 
+        Для конвертации использует libreoffice.
+
+        Args:
+            in_file (ByresIO): содержимое входного docx файла.
+
+        Returns:
+            BytesIO: результирующий файл в формате pdf.
+
+        Raises:
+            TemplatePdfConvertErrorException: при ошибках конвертации.
+        """
         with tempfile.NamedTemporaryFile() as output:
             out_file = pathlib.Path(output.name).resolve()
             out_file.write_bytes(in_file.read())
@@ -63,8 +83,8 @@ class PdfConverter:
                     check=True,
                 )
             except Exception as e:
-                logger.exception("libreoffice conversion failed")
-                raise TemplatePdfConvertErrorException
+                logger.exception("libreoffice conversion failed" + e)
+                raise TemplatePdfConvertErrorException()
             pdf_file = out_file.with_suffix(".pdf")
             out_buffer = BytesIO()
             out_buffer.write(pdf_file.read_bytes())
@@ -74,6 +94,19 @@ class PdfConverter:
 
     @classmethod
     def docx_to_pdf(cls, in_file: BytesIO) -> BytesIO:
+        """Конвертирует docx файл pdf-файла на платформах win3/linux.
+
+        Для конвертации win32 использует Word, для linux - libreoffice.
+
+        Args:
+            in_file (ByresIO): содержимое входного docx файла.
+
+        Returns:
+            BytesIO: результирующий файл в формате pdf.
+
+        Raises:
+            TemplatePdfConvertErrorException: при ошибках конвертации.
+        """
         if sys.platform == "win32":
             return cls._docx_to_pdf_win32(in_file)
         if sys.platform == "linux":
@@ -87,10 +120,10 @@ class PdfConverter:
         """Генерирует превью для заданного pdf файла.
 
         Args:
-            pdf_file (BytesIO): исходный файл pdf
-            width (int), height (int): размеры результирующей картинки
+            pdf_file (BytesIO): исходный файл pdf.
+            width (int), height (int): размеры результирующей картинки.
         Returns:
-            PIL.Image.Image заданных размеров
+            PIL.Image.Image: фрагмент первой страницы заданных размеров.
         """
         images = convert_from_bytes(
             pdf_file.getvalue(),
@@ -101,6 +134,7 @@ class PdfConverter:
         )
         if images:
             return images[0].crop((0, 0, width, height))
+        return None
 
     @classmethod
     def pdf_to_thumbnail(
@@ -113,13 +147,10 @@ class PdfConverter:
             width (int), height (int): размеры результирующей картинки.
             format (str): заданный формат результата (png, jpeg, tiff, ppm).
         Returns:
-            (BytesIO): превью заданных размеров в формате png.
+            BytesIO: картинка превью заданных размеров в нужном формате.
         """
         out_buffer = BytesIO()
-        pil_image = cls.pdf_to_pil_thumbnail(pdf_file, width, height)
-        if pil_image:
-            # pil_image.show()
+        if pil_image := cls.pdf_to_pil_thumbnail(pdf_file, width, height):
             pil_image.save(out_buffer, format=format)
-            print("thumbnail сгенерирован")
             out_buffer.seek(0)
         return out_buffer

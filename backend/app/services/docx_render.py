@@ -13,13 +13,14 @@ morph = pymorphy2.MorphAnalyzer()
 
 
 class CustomFilters:
-    # Вспомогательные фильтры шаблонов
+    """Вспомогательные фильтры шаблонов."""
+
     def __init__(self):
         self._enabled = True
         self._skip_filter_tags = set()
 
     def enable(self, enable_filters: bool):
-        """Активирует/деактивирует все пользовательские фильтры класса"""
+        """Активирует/деактивирует все пользовательские фильтры класса."""
         self._enabled = enable_filters
 
     def _skip_filter(self, tag: str) -> Tuple[bool, Any]:
@@ -27,8 +28,8 @@ class CustomFilters:
 
         Returns:
             (skip, value)
-            skip (bool): True, если фильтр должен быть отключен
-            value (str): значение возвращаемое вместо значения тега
+            skip (bool): True, если фильтр должен быть отключен.
+            value (str): значение возвращаемое вместо значения тега.
         """
         if (
             not self._enabled
@@ -62,10 +63,15 @@ class CustomFilters:
     def inflect_word(self, word: str, case: str) -> str:
         """Преобразование слова в заданный падеж
 
-        :param case:
+        Args:
+            word(str): преобразуемое слово.
+            case(str): требуемый падеж
         'nomn' именительный, 'gent' родительный, 'datv' дательный,
         'accs' винительный, 'ablt' творительный, 'loct' предложный,
-        'voct' звательный
+        'voct' звательный.
+
+        Returns:
+            str: слово, преобразованное в заданный падеж.
         """
         if not word:
             return word
@@ -79,43 +85,57 @@ class CustomFilters:
     def inflect_words(self, words: str, case: str) -> str:
         """Преобразование каждого из слов в строке в заданный падеж
 
-        :param case:
+        Args:
+            words(str): строка из нескольких слова.
+            case(str): требуемый падеж
         'nomn' именительный, 'gent' родительный, 'datv' дательный,
         'accs' винительный, 'ablt' творительный, 'loct' предложный,
-        'voct' звательный
+        'voct' звательный.
+
+        Returns:
+            str: строка, каждое слово которого преобразовано в заданный падеж.
         """
         return " ".join(self.inflect_word(w, case) for w in words.split(" "))
 
     def genitive(self, words: str) -> str:
-        """Преобразует слова родительный падеж"""
+        """Преобразует все слова строки в родительный падеж."""
         skip, value = self._skip_filter(words)
         if skip:
             return value
         return self.inflect_words(words, "gent")
 
     def dative(self, words: str) -> str:
-        """Преобразует слова дательный падеж"""
+        """Преобразует все слова строки в дательный падеж."""
         skip, value = self._skip_filter(words)
         if skip:
             return value
         return self.inflect_words(words, "datv")
 
     def ablt(self, words: str) -> str:
-        """Преобразует слова творительный падеж"""
+        """Преобразует все слова строки в творительный падеж."""
         skip, value = self._skip_filter(words)
         if skip:
             return value
         return self.inflect_words(words, "ablt")
 
     def loct(self, words: str) -> str:
-        """Преобразует слова предложный падеж"""
+        """Преобразует все слова строки в предложный падеж."""
         skip, value = self._skip_filter(words)
         if skip:
             return value
         return self.inflect_words(words, "loct")
 
     def noun_plural(self, word: str, n: int) -> str:
-        """Склонение заданного слова (существительное) в зависимости от числа n."""
+        """Склонение заданного существительного в зависимости от числа n.
+
+        Args:
+            word (str): существительное.
+            n (int): числительное.
+
+        Returns:
+            str: существительное склоненное в нужную форму для числительного n.
+            Например: 'день' для n=1, 'дня' для n=2, 'дней' для n=5 и т.д.
+        """
         skip, value = self._skip_filter(word)
         if skip:
             return value
@@ -123,7 +143,6 @@ class CustomFilters:
             n = int(n)
         except Exception:
             return word
-
         word = morph.parse(word)[0]
         words = (
             word.inflect({"sing", "nomn"}).word,  # 'день'
@@ -134,12 +153,21 @@ class CustomFilters:
         n_mod100 = n % 100
         if n % 10 == 1 and n_mod100 != 11:
             return words[0]
-        elif 2 <= n % 10 <= 4 and (n_mod100 < 10 or n_mod100 >= 20):
+        if 2 <= n % 10 <= 4 and (n_mod100 < 10 or n_mod100 >= 20):
             return words[1]
         return words[2]
 
     def adj_plural(self, word: str, n: int) -> str:
-        """Склонение заданного слова (прилагательное) в зависимости от числа n."""
+        """Склонение заданного прилагательного в зависимости от числа n.
+
+        Args:
+            word (str): существительное.
+            n (int): числительное.
+
+        Returns:
+            str: прилагательное склоненное в нужную форму для числительного n.
+            Например: 'новый' для n=[1, 21, 31..], 'новых' для n=2 и т.д.
+        """
         skip, value = self._skip_filter(word)
         if skip:
             return value
@@ -172,7 +200,7 @@ class CustomFilters:
         return s
 
     def split(self, line: str, sep=None) -> List[str]:
-        """Разбиение строки на части и возвращает в виде списка."""
+        """Разбивает строку на части и возвращает в виде списка слов."""
         skip, value = self._skip_filter(line)
         if skip:
             return [value]
@@ -181,8 +209,8 @@ class CustomFilters:
         return line.split(sep)
 
     def get_filters(self):
-        """Возвращает словарь вида {тег:функция} для всех фильтров"""
-        filters = {
+        """Возвращает словарь вида {тег:функция} для всех фильтров."""
+        return {
             "fio_short": self.fio_short,
             "fio_title": self.fio_title,
             "genitive": self.genitive,
@@ -194,7 +222,6 @@ class CustomFilters:
             "currency_to_words": self.currency_to_words,
             "split": self.split,
         }
-        return filters
 
 
 class DocxRender:
@@ -202,16 +229,21 @@ class DocxRender:
     TAG_STYLE_NAME: Final = "TemplateTag"
 
     def __init__(self, template_file_name: str):
-        self._tempalte_file_name = template_file_name
+        self._template_file_name = template_file_name
         self._template: DocxTemplate = docxtpl.DocxTemplate(template_file_name)
         self._jinja_env = jinja2.Environment()
         self._customfilters = CustomFilters()
         self._jinja_env.filters.update(self._customfilters.get_filters())
 
     def _render_to_file_stream(self, context: Dict[str, str]) -> BytesIO:
-        """Генерирует документ согласно контексту сохраняя результат в потоке
+        """Генерирует docx документ из шаблона согласно контексту.
 
-        :context: словарь вида {тэг:значение} для генерации документа"""
+        Args:
+            context: словарь вида {тэг:значение} для генерации документа
+
+        Returns:
+            BytesIO: документ после замены в шаблоне всех тегов на значения.
+        """
         self._template.render(context, jinja_env=self._jinja_env)
         file_stream = BytesIO()
         self._template.save(file_stream)
@@ -219,9 +251,13 @@ class DocxRender:
         return file_stream
 
     def get_document(self, context: Dict[str, str]) -> BytesIO:
-        """Генерирует и возвращает документ согласно заданному контексту
+        """Генерирует и возвращает документ согласно заданному контексту.
 
-        :context: словарь вида {тэг:значение} для генерации документа
+        Args:
+            context: словарь вида {тэг:значение} для генерации документа
+
+        Returns:
+            BytesIO: документ после замены в шаблоне всех тегов на значения.
         """
         self._customfilters.enable(True)  # switch custom filters on
         self._customfilters._skip_filter_tags.clear()
@@ -229,9 +265,14 @@ class DocxRender:
 
     def get_draft(self, context: Dict[str, str]) -> BytesIO:
         """Генерирует и возвращает эскиз документа согласно контексту
+
         Все поля тэгов маркируются желтым.
 
-        :context: словарь вида {тэг:значение} для генерации эскиза
+        Args:
+            context: словарь вида {тэг:значение} для генерации эскиза.
+
+        Returns:
+            BytesIO: эскиз после замены в шаблоне всех тегов на значения.
         """
         self._customfilters.enable(False)  # switch custom filters off
         self.markdown_tags()
@@ -241,13 +282,17 @@ class DocxRender:
     def get_partial(
         self, context: Dict[str, str], context_default: Dict[str, str] = None
     ) -> BytesIO:
-        """
-        Генерирует и возвращает частично заполненный документ согласно контекстам
+        """Генерирует и возвращает частично заполненный документ.
 
-        :param:
-        context - словарь вида {тэг:значение}
-        context_default - словарь значений по умолчанию {тэг:зн.по умолчанию}
-        если тэг не найден ни в одном из контекстов, то заменяется на ''
+        Тэги, которые заданы в context_default и не найдены в context,
+        маркируются желтым цветом (как не заполненные).
+
+        Args:
+            context: словарь значения полей вида {тэг:значение}
+            context_default: словарь значений по умолчанию вида
+            {тэг:значение по умолчанию}
+        Returns:
+            BytesIO: документ после замены в шаблоне всех тегов на значения.
         """
         self._customfilters.enable(True)  # switch custom filters on
         self._template.init_docx()
@@ -263,11 +308,11 @@ class DocxRender:
         return self._render_to_file_stream(context)
 
     def save(self, result_file_name):
-        """Сохранение текущего документа"""
+        """Сохранение текущего документа."""
         self._template.save(result_file_name)
 
     def get_tags(self) -> List[str]:
-        """Возвращает список всех тэгов из docx шаблона"""
+        """Возвращает список всех тэгов из docx шаблона."""
         return self._template.get_undeclared_template_variables(
             jinja_env=self._jinja_env
         )
@@ -280,7 +325,7 @@ class DocxRender:
         # self._template.is_rendered = True
 
     def _docx_paragraphs(self, docx: Document):
-        """Генератор по всем параграфам документа"""
+        """Генератор по всем параграфам документа."""
         for p in docx.paragraphs:
             yield p
         for table in docx.tables:
@@ -290,7 +335,7 @@ class DocxRender:
                         yield p
 
     def _docx_runs(self, docx: Document):
-        """Генератор по всем прогонам (run) документа"""
+        """Генератор по всем прогонам (run) документа."""
         for p in self._docx_paragraphs(docx):
             for r in p.runs:
                 yield r
@@ -309,7 +354,7 @@ class DocxRender:
                 start_run = None
 
     def prepare_template(self):
-        """Подготовка шаблона к использованию (объединение прогонов)"""
+        """Подготовка шаблона к использованию (объединение прогонов)."""
         self._template.init_docx()
         docx = self._template.docx
         tag_style = docx.styles[self.TAG_STYLE_NAME]
@@ -317,13 +362,17 @@ class DocxRender:
         runs = list(self._docx_runs(docx))
         # Объединение последовательных прогонов с тэгами в один
         self._combine_styled_tag_runs(tag_style, runs)
-        docx.save(self._tempalte_file_name)
+        docx.save(self._template_file_name)
 
     def _markdown_given_tags(
         self, docx: Document, tags: List[str], color=WD_COLOR_INDEX.YELLOW
     ):
-        """
-        Подсветка полей с тегом из списка при помощи заданного цвета.
+        """Маркировка заданных тегов при помощи заданного цвета.
+
+        Args:
+            docx (Document): модифицируемый docx документ.
+            tags (list[str]): список тэгов, который должны быть промаркированы.
+            color: цвет для маркировки тэгов.
         """
 
         def markdown_tag_begin(i, runs):
@@ -336,14 +385,14 @@ class DocxRender:
         tags_set = set(tags)
         tag_style = docx.styles[self.TAG_STYLE_NAME]
         runs = list(self._docx_runs(docx))
-        # TODO: подготовка шаблона должна быть выполнена при загрузке шаблона в базу
+        # TODO: подготовка должна быть выполнена при загрузке шаблона в базу
         self._combine_styled_tag_runs(tag_style, runs)
         for i, r in enumerate(runs):
             if r.style == tag_style and r.text in tags_set:
                 markdown_tag_begin(i, runs)
 
     def _print_document_runs(self, docx: Document):
-        """Исследование документа - печать всех его прогонов (run)"""
+        """Анализ документа: печать всех его прогонов (run)"""
         invalid_runs = []
         for p in self._docx_paragraphs(docx):
             print(f"p=<{p.text}>")
@@ -363,73 +412,3 @@ class DocxRender:
         for r in self._docx_runs(docx):
             if tag in r.text:
                 r.font.highlight_color = color
-
-
-# # Примеры использования
-# path = "\\backend\\data\\"
-# template_file_name = "заявление_на_отпуск_tpl.docx"
-# draft_file_name = "заявление_на_отпуск_draft.docx"
-# final_file_name = "заявление_на_отпуск_final.docx"
-# partial_file_name = "заявление_на_отпуск_partial.docx"
-
-# # Контекст для эскиза: словарь вида {field.tag: field.name}
-# context_draft = {
-#     "РаботодательНаименованиеОрганизации": "Наименование организации",
-#     "дата": "дата",
-#     "РаботодательДолжность": "Должность руководителя",
-#     "РаботодательФИО": "ФИО руководителя",
-#     "РаботникФИО": "ФИО",
-#     "продолжительность": "продолжительность",
-#     "датаНачала": "дата начала",
-#     "РаботникДолжность": "должность заявителя",
-#     "отпускные": "размер отпускных",
-# }
-
-# # Контекст для документа: словарь вида {field.tag: field.value}
-# context_doc = {
-#     "РаботодательДолжность": "генеральный директор",
-#     "РаботодательНаименованиеОрганизации": '"ООО "Рога и копыта"',
-#     "РаботодательФИО": "рогов федор федорович",
-#     "РаботникФИО": "иванов иван иванович",
-#     "продолжительность": "14",
-#     "датаНачала": "23.10.2023",
-#     "РаботникДолжность": "старший рогополировальщик",
-#     "дата": "16.10.2023",
-#     "отпускные": 5021.00,
-# }
-
-# # Контекст для документа: словарь вида {field.tag: field.value}
-# context_partial = {
-#     # "РаботодательДолжность": "генеральный директор",
-#     # "РаботодательНаименованиеОрганизации": '"ООО "Рога и копыта"',
-#     # "РаботодательФИО": "рогов федор федорович",
-#     # "РаботникФИО": "иванов иван иванович",
-#     # "продолжительность": "14",
-#     # "датаНачала": "23.10.2023",
-#     # "РаботникДолжность": "старший рогополировальщик",
-#     # "дата": "16.10.2023",
-#     # "отпускные": 5000,
-#     # "garbage": "garbage_value",
-# }
-
-# # получение всех тэгов из шаблона
-# tpl = DocumentTemplate(path + "Заявление_на_отпуск_tpl.docx")
-# print(tpl.get_tags())
-
-# # Получение Эскиза
-# tpl = DocumentTemplate(path + template_file_name)
-# fs = tpl.get_draft(context_draft)
-# with open(path + draft_file_name, "wb") as outfile:
-#     outfile.write(fs.getbuffer())
-
-# # # Генерация документа по заданному контексту значений полей
-# tpl = DocumentTemplate(path + template_file_name)
-# fs = tpl.get_document(context_doc)
-# with open(path + final_file_name, "wb") as outfile:
-#     outfile.write(fs.getbuffer())
-
-# # Получение preview - недозаполненного документа
-# tpl = DocumentTemplate(path + template_file_name)
-# fs = tpl.get_partial(context_partial, context_draft)
-# with open(path + partial_file_name, "wb") as outfile:
-#     outfile.write(fs.getbuffer())

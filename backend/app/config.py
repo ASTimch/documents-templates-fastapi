@@ -65,6 +65,9 @@ class Settings(BaseSettings):
     TEMPLATE_DOCX_DIR: str = "/docx_storage/tpl_docx/"
     TEMPLATE_THUMBNAIL_DIR: str = "/docx_storage/tpl_thumbnails/"
 
+    THUMBNAIL_HEIGHT: int = 300
+    THUMBNAIL_WIDTH: int = 300
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8"
     )
