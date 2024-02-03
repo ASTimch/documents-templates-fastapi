@@ -1,10 +1,11 @@
 from typing import Optional
+
 from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, FastAPIUsers, IntegerIDMixin
 from fastapi_users.authentication import (
+    AuthenticationBackend,
     CookieTransport,
     JWTStrategy,
-    AuthenticationBackend,
 )
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -60,7 +61,10 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
         self, user: User, token: str, request: Optional[Request] = None
     ):
         print(
-            f"Verification requested for user {user.id}. Verification token: {token}"
+            (
+                f"Verification requested for user {user.id}."
+                f" Verification token: {token}"
+            )
         )
 
     # async def validate_password(

@@ -1,4 +1,5 @@
 import pytest
+
 from app.common.exceptions import (
     UserTemplateFavoriteAlreadyExistsException,
     UserTemplateFavoriteDoesNotExistsException,
@@ -6,8 +7,8 @@ from app.common.exceptions import (
 from app.crud.template_dao import UserTemplateFavoriteDAO
 from app.schemas.template import TemplateWriteDTO
 from app.services.favorite import TemplateFavoriteService
-from app.tests.fixtures import templates_for_write
 from app.services.template import TemplateService
+from app.tests.fixtures import templates_for_write
 
 
 class TestTemplateFavoriteService:
@@ -43,7 +44,7 @@ class TestTemplateFavoriteService:
         is_favorited = await TemplateFavoriteService.is_favorited(
             user_id, template_id
         )
-        assert is_favorited == True, "Неверное is_favorited"
+        assert is_favorited is True, "Неверное is_favorited"
 
         # повторное добавление в избранное
         with pytest.raises(UserTemplateFavoriteAlreadyExistsException):

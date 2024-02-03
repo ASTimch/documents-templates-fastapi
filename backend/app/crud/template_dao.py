@@ -1,8 +1,7 @@
-from datetime import date
 from typing import Optional
 
-from sqlalchemy import Result, and_, func, or_, select, update
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy import Result, select
+from sqlalchemy.orm import selectinload
 
 from app.crud.base_dao import BaseDAO
 from app.database import async_session_maker

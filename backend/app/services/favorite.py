@@ -2,7 +2,6 @@ from app.common.exceptions import (
     UserTemplateFavoriteAlreadyExistsException,
     UserTemplateFavoriteDoesNotExistsException,
 )
-
 from app.crud.template_dao import UserTemplateFavoriteDAO
 
 

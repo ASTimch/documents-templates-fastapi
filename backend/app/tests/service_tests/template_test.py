@@ -13,13 +13,12 @@ from app.config import settings
 from app.crud.template_dao import TemplateDAO
 from app.schemas.template import TemplateReadDTO, TemplateWriteDTO
 from app.services.template import TemplateService
-from app.services.template_field_type import TemplateFieldTypeService
 from app.tests.fixtures import (
+    broken_docx_error_tags,
+    broken_docx_path,
     template_with_invalid_type_field,
     templates_for_read,
     templates_for_write,
-    broken_docx_path,
-    broken_docx_error_tags,
 )
 
 
@@ -61,7 +60,7 @@ class TestTemplateService:
 
     async def test_get_invalid_id_raises_exception(self):
         with pytest.raises(TemplateNotFoundException):
-            obj_dto = await TemplateService.get(id=100)
+            await TemplateService.get(id=100)
 
     @pytest.mark.parametrize(
         "write_data, read_data", zip(templates_for_write, templates_for_read)
@@ -94,7 +93,7 @@ class TestTemplateService:
             await TemplateService.delete(id=new_obj_id)
             assert (
                 False
-            ), "Повторное удаление должно взводить TemplateAlreadyDeletedException"
+            ), "Удаление должно взводить TemplateAlreadyDeletedException"
 
     async def test_get_all_and_delete(self):
         db_len = len(await TemplateService.get_all())

@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Optional, Tuple
 import aiofiles
 import aiofiles.os
 from fastapi import Response, UploadFile
-from sqlalchemy import Sequence
 
 from app.common.constants import Messages
 from app.common.exceptions import (
@@ -17,25 +16,16 @@ from app.common.exceptions import (
     TemplateRenderErrorException,
     TypeFieldNotFoundException,
 )
-from app.config import Settings, settings
+from app.config import Settings
 from app.crud.template_dao import (
     TemplateDAO,
     TemplateFieldDAO,
     TemplateFieldGroupDAO,
-    TemplateFieldTypeDAO,
 )
-from app.database import async_session_maker, idpk
-from app.models.base import storage_docx
-from app.models.template import (
-    Template,
-    TemplateField,
-    TemplateFieldGroup,
-    TemplateFieldType,
-)
+from app.database import idpk
+from app.models.template import Template
 from app.models.user import User
 from app.schemas.template import (
-    TemplateFieldTypeReadDTO,
-    TemplateFieldTypeWriteDTO,
     TemplateReadDTO,
     TemplateReadMinifiedDTO,
     TemplateWriteDTO,
@@ -80,7 +70,9 @@ class TemplateService:
     def _update_fields_template_id(
         cls, fields: list[dict[str, Any]], template_id: int
     ) -> None:
-        """Назначение всем элементам из fields родительского шаблона template_id"""
+        """
+        Назначение всем элементам из fields родительского шаблона template_id.
+        """
         for field in fields:
             field["template_id"] = template_id
 

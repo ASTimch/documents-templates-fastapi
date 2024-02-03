@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated, Optional
-from fastapi import Path
-from pydantic import BaseModel, ConfigDict, Field, FilePath
+
+from pydantic import BaseModel, ConfigDict, Field
 
 id_int = Annotated[int, Field(description="Идентификатор")]
 
@@ -88,8 +88,8 @@ class TemplateReadMinifiedDTO(BaseModel):
         Optional[int], Field(title="Категория", default=None)
     ]
     owner_id: Annotated[Optional[int], Field(title="Владелец", default=None)]
-    # category: Annotated[Optional[int], Field(title="Категория", default=None)]
-    # owner: Annotated[Optional[int], Field(title="Владелец", default=None)]
+    # category: Annotated[Optional[int],Field(title="Категория", default=None)]
+    # owner: Annotated[Optional[int],Field(title="Владелец", default=None)]
     is_favorited: Annotated[bool, Field(title="В избранном", default=False)]
     thumbnail: Optional[str]  # Optional[FilePath]
 

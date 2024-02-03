@@ -1,16 +1,16 @@
-from datetime import date
 from typing import Optional
 
-from sqlalchemy import Result, Sequence, and_, func, or_, select, update
+from sqlalchemy import Result, Sequence, select
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.crud.base_dao import BaseDAO
 from app.database import async_session_maker
 from app.models.document import Document, DocumentField
-from app.models.favorite import UserTemplateFavorite
 
 # from app.hotels.schemas import SHotelRead
-from app.models.template import Template, TemplateField, TemplateFieldType
+from app.models.template import TemplateField
+
+# from app.models.favorite import UserTemplateFavorite
 
 
 class DocumentFieldDAO(BaseDAO):

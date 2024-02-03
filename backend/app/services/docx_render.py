@@ -194,10 +194,9 @@ class CustomFilters:
 
         if roubles >= 10**14:
             return num
-        s = num2words(
+        return num2words(
             roubles, to="currency", lang="ru", cents=False, currency="RUB"
         )
-        return s
 
     def split(self, line: str, sep=None) -> List[str]:
         """Разбивает строку на части и возвращает в виде списка слов."""

@@ -1,17 +1,15 @@
-import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Response, UploadFile, status
 from fastapi.responses import FileResponse, JSONResponse
 
 from app.auth import (
-    current_superuser,
     current_active_user,
+    current_superuser,
     current_user_or_none,
 )
 from app.models.user import User
 from app.schemas.template import (
-    TemplateFieldReadDTO,
     TemplateFieldWriteValueListDTO,
     TemplateReadDTO,
     TemplateReadMinifiedDTO,
@@ -29,7 +27,6 @@ router = APIRouter()
 async def get_all_templates(
     user: Optional[User] = Depends(current_user_or_none),
 ) -> Optional[list[TemplateReadMinifiedDTO]]:
-    print("get_templates!!!")
     templates = await TemplateService.get_all(user=user)
     return templates
 

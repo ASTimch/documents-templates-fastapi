@@ -1,5 +1,6 @@
-from app.services.docx_render import CustomFilters
 import pytest
+
+from app.services.docx_render import CustomFilters
 
 fiom_fixture = "иванов иван петрович"
 fiom_results = {

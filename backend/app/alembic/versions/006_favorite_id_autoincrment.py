@@ -5,10 +5,11 @@ Revises: 005
 Create Date: 2023-12-26 23:26:34.232504
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 # import path_to_custom_types_py_file
 

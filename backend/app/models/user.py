@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+
 from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
 from sqlalchemy import Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -8,6 +9,7 @@ from app.models.document import Document
 
 if TYPE_CHECKING:
     from app.models.template import Template
+
 from app.models.favorite import UserTemplateFavorite
 
 

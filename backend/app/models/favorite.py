@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING
+# from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, ForeignKey, Identity, Table
+from sqlalchemy import ForeignKey, Identity
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base

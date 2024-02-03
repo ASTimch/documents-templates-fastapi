@@ -1,5 +1,5 @@
-from typing import Any
 import pytest
+
 from app.common.exceptions import (
     TypeFieldAlreadyExistsException,
     TypeFieldNotFoundException,
@@ -38,7 +38,7 @@ class TestFieldTypeService:
 
     async def test_get_invalid_id_raises_exception(self):
         with pytest.raises(TypeFieldNotFoundException):
-            obj_dto = await TemplateFieldTypeService.get(id=100)
+            await TemplateFieldTypeService.get(id=100)
 
     async def test_get_all(self):
         dto_list = await TemplateFieldTypeService.get_all()

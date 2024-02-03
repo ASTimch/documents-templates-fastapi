@@ -1,7 +1,6 @@
-from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, ForeignKey, String, text
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import (
@@ -20,6 +19,7 @@ from app.models.base import (
 # from fastapi_storages.integrations.sqlalchemy import FileType, ImageType
 if TYPE_CHECKING:
     from app.models.user import User
+
 from app.models.favorite import UserTemplateFavorite
 
 

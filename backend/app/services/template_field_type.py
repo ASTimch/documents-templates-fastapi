@@ -1,15 +1,11 @@
-from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 
 from app.common.constants import Messages
 from app.common.exceptions import (
     TypeFieldAlreadyExistsException,
     TypeFieldNotFoundException,
 )
-from app.config import settings
-from app.crud.template_dao import (
-    TemplateFieldTypeDAO,
-)
+from app.crud.template_dao import TemplateFieldTypeDAO
 from app.database import idpk
 from app.schemas.template import (
     TemplateFieldTypeReadDTO,
@@ -20,7 +16,17 @@ from app.schemas.template import (
 class TemplateFieldTypeService:
     @classmethod
     async def get(cls, *, id: idpk) -> Optional[TemplateFieldTypeReadDTO]:
-        """Получить объект по заданному id"""
+        """Возвращает тип поля с заданным id.
+
+        Args:
+            id (int): идентификатор объекта в БД.
+
+        Returns:
+            TemplateFieldTypeReadDTO: описание типа с заданным id.
+
+        Raises:
+            TypeFieldNotFoundException: если тип с заданным id не найден.
+        """
 
         obj = await TemplateFieldTypeDAO.get_by_id(id)
         if not obj:
@@ -29,27 +35,39 @@ class TemplateFieldTypeService:
 
     @classmethod
     async def get_all(cls) -> list[TemplateFieldTypeReadDTO]:
-        """Получить все объекты"""
+        """Возвращает все типы полей из БД.
+
+        Returns:
+            list[TemplateFieldTypeReadDTO]: список типов полей.
+        """
 
         obj_sequence = await TemplateFieldTypeDAO.get_all()
-        obj_dto_list = [
+        return [
             TemplateFieldTypeReadDTO.model_validate(obj)
             for obj in obj_sequence
         ]
-        return obj_dto_list
 
     @classmethod
     async def get_all_type_id_mapping(cls) -> Optional[dict[str, int]]:
         """Получить словарь соответствия {type:id}"""
         obj_sequence = await TemplateFieldTypeDAO.get_all()
-        type_id_mapping = {obj.type: obj.id for obj in obj_sequence}
-        return type_id_mapping
+        return {obj.type: obj.id for obj in obj_sequence}
 
     @classmethod
     async def add(
         cls, obj: TemplateFieldTypeWriteDTO
     ) -> Optional[TemplateFieldTypeReadDTO]:
-        """Добавить новый тип"""
+        """Добавить новый тип в БД.
+
+        Args:
+            obj (TemplateFieldTypeWriteDTO): описание нового типа.
+
+        Returns:
+            TemplateFieldTypeReadDTO: описание добавленного типа.
+
+        Raises:
+            TypeFieldAlreadyExistsException: если тип уже существует.
+        """
 
         obj_db = await TemplateFieldTypeDAO.get_one_or_none(type=obj.type)
         if obj_db:

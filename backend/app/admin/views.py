@@ -1,13 +1,14 @@
 from sqladmin import Admin, ModelView
+
 from app.models.document import Document, DocumentField
+from app.models.favorite import UserTemplateFavorite
 from app.models.template import (
+    Template,
     TemplateField,
     TemplateFieldGroup,
     TemplateFieldType,
-    Template,
 )
 from app.models.user import User
-from app.models.favorite import UserTemplateFavorite
 
 
 class TemplateFieldTypeAdmin(ModelView, model=TemplateFieldType):
@@ -18,6 +19,7 @@ class TemplateFieldTypeAdmin(ModelView, model=TemplateFieldType):
 
 
 class TemplateFieldAdmin(ModelView, model=TemplateField):
+
     column_list = [c.name for c in TemplateField.__table__.c] + [
         TemplateField.type,
         TemplateField.group,

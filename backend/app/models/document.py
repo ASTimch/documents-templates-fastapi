@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING, Optional
+
 from sqlalchemy import ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

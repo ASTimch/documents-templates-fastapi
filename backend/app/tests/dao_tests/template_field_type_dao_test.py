@@ -1,4 +1,5 @@
 import pytest
+
 from app.crud.template_dao import TemplateFieldTypeDAO
 
 field_type_db = {

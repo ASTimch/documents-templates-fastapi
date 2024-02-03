@@ -2,22 +2,22 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, status
 
+from app.auth import current_superuser
 from app.database import idpk
 from app.models.user import User
 from app.schemas.template import (
-    TemplateFieldTypeWriteDTO,
     TemplateFieldTypeReadDTO,
+    TemplateFieldTypeWriteDTO,
 )
 from app.services.template import TemplateFieldTypeService
-from app.auth import current_superuser
 
 router = APIRouter()
 
 
 @router.get("/", summary="Получить все доступные типы полей")
-async def get_all_template_field_types() -> Optional[
-    list[TemplateFieldTypeReadDTO]
-]:
+async def get_all_template_field_types() -> (
+    Optional[list[TemplateFieldTypeReadDTO]]
+):
     template_field_types = await TemplateFieldTypeService.get_all()
     return template_field_types
 

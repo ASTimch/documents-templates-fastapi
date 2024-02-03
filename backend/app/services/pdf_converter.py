@@ -33,10 +33,10 @@ class PdfConverter:
             output.write(in_file.read())
         try:
             word = win32com.client.Dispatch("Word.Application")
-            wdFormatPDF = 17
+            wd_format_pdf = 17
             pdf_file = docx_file.with_suffix(".pdf")
             doc = word.Documents.Open(str(docx_file))
-            doc.SaveAs(str(pdf_file), FileFormat=wdFormatPDF)
+            doc.SaveAs(str(pdf_file), FileFormat=wd_format_pdf)
             doc.Close(0)
         except Exception as e:
             docx_file.unlink(missing_ok=True)

@@ -1,15 +1,12 @@
 from datetime import datetime
 from typing import Annotated, Any
-from sqlalchemy import DateTime, Identity, String, func
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapped,
-    mapped_column,
-    MappedAsDataclass,
-)
+
+from fastapi_storages import FileSystemStorage
 from fastapi_storages.integrations.sqlalchemy import FileType as _FileType
 from fastapi_storages.integrations.sqlalchemy import ImageType as _ImageType
-from fastapi_storages import FileSystemStorage
+from sqlalchemy import String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
 from app.config import settings
 
 storage_docx = FileSystemStorage(path=settings.TEMPLATE_DOCX_DIR)
@@ -47,16 +44,6 @@ class Base(DeclarativeBase):
     # @declared_attr.directive
     # def __tablename__(cls) -> str:
     #     return cls.__name__.lower()
-
-
-# class DateTimeMixin(MappedAsDataclass):
-
-#     created_at: Mapped[datetime] = mapped_column(
-#         init=False, default_factory=datetime.utcnow
-#     )
-#     updated_at: Mapped[datetime | None] = mapped_column(
-#         init=False, onupdate=datetime.utcnow
-#     )
 
 
 class TimestampMixin:

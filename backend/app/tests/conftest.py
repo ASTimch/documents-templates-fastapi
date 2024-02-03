@@ -1,10 +1,6 @@
-import sys
-import urllib
 import asyncio
 import json
-import os
-import warnings
-from datetime import datetime
+import sys
 from typing import AsyncIterator
 
 import pytest

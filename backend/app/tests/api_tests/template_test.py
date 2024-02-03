@@ -1,10 +1,12 @@
 from typing import Any, Optional
-from httpx import AsyncClient
+
 import pytest
+from httpx import AsyncClient
+
 from app.config import settings
 from app.schemas.template import TemplateWriteDTO
 from app.services.template import TemplateService
-from app.tests.fixtures import templates_for_write, templates_for_read
+from app.tests.fixtures import templates_for_read, templates_for_write
 
 
 @pytest.mark.parametrize("route", [settings.API_V1_PREFIX + "/template/"])

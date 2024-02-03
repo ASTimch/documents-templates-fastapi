@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from sqladmin import Admin
+
 from app.admin.views import init_admin
 from app.api import routers
 from app.config import settings
