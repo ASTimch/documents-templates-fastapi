@@ -3,16 +3,17 @@ from app.common.exceptions import (
     UserTemplateFavoriteDoesNotExistsException,
 )
 from app.crud.template_dao import UserTemplateFavoriteDAO
+from app.models.base import pk_type
 
 
 class TemplateFavoriteService:
     @classmethod
-    async def add_favorite(cls, user_id: int, template_id: int):
+    async def add_favorite(cls, user_id: pk_type, template_id: pk_type):
         """Добавить шаблон в список избранного для пользователя.
 
         Args:
-            user_id (int): идентификатор пользователя.
-            template_id (int): идентификатор шаблона.
+            user_id (pk_type): идентификатор пользователя.
+            template_id (pk_type): идентификатор шаблона.
 
         Raises:
             UserTemplateFavoriteAlreadyExistsException: шаблон уже в избранном.
@@ -27,12 +28,12 @@ class TemplateFavoriteService:
         )
 
     @classmethod
-    async def delete_favorite(cls, user_id: int, template_id: int):
+    async def delete_favorite(cls, user_id: pk_type, template_id: pk_type):
         """Удалить шаблон из списка избранного для пользователя.
 
         Args:
-            user_id (int): идентификатор пользователя.
-            template_id (int): идентификатор шаблона.
+            user_id (pk_type): идентификатор пользователя.
+            template_id (pk_type): идентификатор шаблона.
 
         Raises:
             UserTemplateFavoriteDoesNotExistsException: шаблон не в избранном.
@@ -45,12 +46,14 @@ class TemplateFavoriteService:
         await UserTemplateFavoriteDAO.delete_(obj_db.id)
 
     @classmethod
-    async def is_favorited(cls, user_id: int, template_id: int) -> bool:
+    async def is_favorited(
+        cls, user_id: pk_type, template_id: pk_type
+    ) -> bool:
         """Находится ли шаблон в списке избранного для пользователя.
 
         Args:
-            user_id (int): идентификатор пользователя.
-            template_id (int): идентификатор шаблона.
+            user_id (pk_type): идентификатор пользователя.
+            template_id (pk_type): идентификатор шаблона.
 
         Return:
             bool: True, если шаблон содержится в списке избранного;
@@ -62,14 +65,14 @@ class TemplateFavoriteService:
         return obj_db is not None
 
     @classmethod
-    async def get_user_favorite_ids(cls, user_id: int) -> list[int]:
+    async def get_user_favorite_ids(cls, user_id: pk_type) -> list[pk_type]:
         """Возвращает идентификаторы всех избранных шаблонов для пользователя.
 
         Args:
-            user_id (int): идентификатор пользователя.
+            user_id (pk_type): идентификатор пользователя.
 
         Return:
-            list[int]: список идентификаторов из списка избранного.
+            list[pk_type]: список идентификаторов из списка избранного.
         """
         obj_db = await UserTemplateFavoriteDAO.get_all(user_id=user_id)
         return [obj.template_id for obj in obj_db]

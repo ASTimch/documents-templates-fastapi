@@ -48,7 +48,8 @@ async def prepare_database():
             if init_id:
                 await session.execute(
                     text(
-                        f"SELECT SETVAL('{table_name}_id_seq', COALESCE((SELECT MAX(id) FROM {table_name}),1));"
+                        f"SELECT SETVAL('{table_name}_id_seq',"
+                        f" COALESCE((SELECT MAX(id) FROM {table_name}),1));"
                     )
                 )
         await session.commit()

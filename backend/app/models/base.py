@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, TypeAlias
 
 from fastapi_storages import FileSystemStorage
 from fastapi_storages.integrations.sqlalchemy import FileType as _FileType
@@ -23,6 +23,7 @@ class ImageType(_ImageType):
         super().__init__(*args, **kwargs)
 
 
+pk_type: TypeAlias = int
 str_50 = Annotated[str, 50]
 str_256 = Annotated[str, 256]
 
@@ -31,7 +32,7 @@ class Base(DeclarativeBase):
     __abstract__ = True
 
     type_annotation_map = {str_50: String(50), str_256: String(256)}
-    id: Mapped[int] = mapped_column(
+    id: Mapped[pk_type] = mapped_column(
         primary_key=True,
         autoincrement=True,
     )

@@ -22,7 +22,7 @@ from app.crud.template_dao import (
     TemplateFieldDAO,
     TemplateFieldGroupDAO,
 )
-from app.database import idpk
+from app.models.base import pk_type
 from app.models.template import Template
 from app.models.user import User
 from app.schemas.template import (
@@ -53,10 +53,19 @@ class TemplateService:
 
     @classmethod
     def _update_fields_type_by_id(
-        cls, fields: list[dict[str, Any]], type_id_mapping: dict[str:int]
+        cls, fields: list[dict[str, Any]], type_id_mapping: dict[str:pk_type]
     ) -> None:
-        """Замена всех наименований типов type соответствующим значением
-        type_id из словаря соответствия type_id_mapping"""
+        """Замена наименований типов идентификаторами из type_id_mapping.
+
+        Args:
+            fields (list[dict[str, Any]]): список описаний полей.
+            type_id_mapping (dict[str:pk_type]): словарь соответствия
+            наименований типов соответствующим идентификаторам из б.д.
+
+        Raises:
+            TypeFieldNotFoundException: если обнаружен неизвестный тип.
+
+        """
         for field in fields:
             field_type = field.pop("type")
             type_id = type_id_mapping.get(field_type)
@@ -68,7 +77,7 @@ class TemplateService:
 
     @classmethod
     def _update_fields_template_id(
-        cls, fields: list[dict[str, Any]], template_id: int
+        cls, fields: list[dict[str, Any]], template_id: pk_type
     ) -> None:
         """
         Назначение всем элементам из fields родительского шаблона template_id.
@@ -77,11 +86,11 @@ class TemplateService:
             field["template_id"] = template_id
 
     @classmethod
-    async def add(cls, obj: TemplateWriteDTO) -> Optional[int]:
+    async def add(cls, obj: TemplateWriteDTO) -> Optional[pk_type]:
         """Добавить новый шаблон в б.д.
 
         Returns:
-            int: идентификатор созданного объекта шаблон.
+            pk_type: идентификатор созданного объекта шаблон.
         """
         type_id_mapping = (
             await TemplateFieldTypeService.get_all_type_id_mapping()
@@ -109,11 +118,11 @@ class TemplateService:
         return template.id
 
     @classmethod
-    async def get_or_raise_not_found(cls, id: idpk) -> Optional[Template]:
+    async def get_or_raise_not_found(cls, id: pk_type) -> Optional[Template]:
         """Поиск шаблона по идентификатору.
 
         Args:
-            id (int): идентификатор шаблона.
+            id (pk_type): идентификатор шаблона.
 
         Returns:
             Template: объект шаблона с заданным id.
@@ -129,7 +138,7 @@ class TemplateService:
 
     @classmethod
     async def get(
-        cls, *, id: idpk, user: Optional[User] = None
+        cls, *, id: pk_type, user: Optional[User] = None
     ) -> Optional[TemplateReadDTO]:
         """Возвращает ответ для шаблона с заданным id.
 
@@ -168,17 +177,11 @@ class TemplateService:
             )
         return TemplateReadDTO.model_validate(obj_dict)
 
-    # @classmethod
-    # async def get_select(
-    #     *, name: str = None, method: str = None, path: str = None
-    # ) -> Select:
-    #     return await ApiDao.get_list(name=name, method=method, path=path)
-
     @classmethod
     async def get_all(
         cls, user: Optional[User] = None, include_deleted=False
     ) -> List[TemplateReadMinifiedDTO]:
-        """Возвращает все шаблоны в сокращенном виде (без описания полей)
+        """Возвращает все шаблоны в сокращенном виде (без описания полей).
 
         Args:
             user (User): пользователь для которого генерируется ответ.
@@ -204,11 +207,11 @@ class TemplateService:
         return obj_dto_list
 
     @classmethod
-    async def update_docx_template(cls, id: idpk, file: UploadFile) -> None:
-        """Обновить docx файл шаблона с заданным id.
+    async def update_docx_template(cls, id: pk_type, file: UploadFile) -> None:
+        """Обновить docx файл шаблона с заданным идентификатором.
 
         Args:
-            id (int): идентификатор шаблона в б.д.
+            id (pk_type): идентификатор шаблона в б.д.
             file(UploadFile): загруженный docx файл шаблона.
         """
         obj_db = await cls.get_or_raise_not_found(id)
@@ -221,13 +224,13 @@ class TemplateService:
         await TemplateDAO.update_(obj_db.id, filename=file)
 
     @classmethod
-    async def generate_thumbnail(cls, template_id: idpk):
+    async def generate_thumbnail(cls, template_id: pk_type):
         """Генерирует png thumbnail для шаблона документа.
 
         После генерации обновляет поле thumbnail шаблона в базе данных.
 
         Args:
-            template_id (int): идентификатор шаблона.
+            template_id (pk_type): идентификатор шаблона.
 
         Raises:
             TemplateNotFoundException: если шаблон с заданным template_id
@@ -254,11 +257,11 @@ class TemplateService:
             logger.exception(e)
 
     @classmethod
-    async def delete(cls, id: idpk) -> int:
+    async def delete(cls, id: pk_type) -> int:
         """Удалить шаблон с заданным id.
 
         Args:
-            id (int): идентификатор шаблона.
+            id (pk_type): идентификатор шаблона.
 
         Raises:
             TemplateNotFoundException: если шаблон с заданным id отсутствует.
@@ -273,13 +276,13 @@ class TemplateService:
 
     @classmethod
     async def get_inconsistent_tags(
-        cls, id: idpk
+        cls, id: pk_type
     ) -> Tuple[Tuple[str], Tuple[str]]:
         """
         Возвращает списки несогласованных тэгов между БД и шаблоном docx.
 
         Args:
-            id (int): идентификатор шаблона в б.д.
+            id (pk_type): идентификатор шаблона в б.д.
 
         Returns:
             (excess_tags, excess_fields): кортежи ошибочных тэгов
@@ -306,11 +309,11 @@ class TemplateService:
         return (excess_tags, excess_fields)
 
     @classmethod
-    async def get_consistency_errors(cls, id: idpk) -> List[Dict[str, str]]:
+    async def get_consistency_errors(cls, id: pk_type) -> List[Dict[str, str]]:
         """Проверка согласованности тэгов в docx файле и полях базы данных
 
         Args:
-            id (int): идентификатор шаблона в б.д.
+            id (pk_type): идентификатор шаблона в б.д.
 
         Returns:
             dict[str]: словарь ответа результата проверки шаблона.
@@ -332,8 +335,8 @@ class TemplateService:
 
         Raises:
             TemplateNotFoundException: если шаблон с заданным id отсутствует.
-        """
 
+        """
         excess_tags, excess_fields = await cls.get_inconsistent_tags(id)
         errors = []
         if excess_tags:
@@ -355,7 +358,7 @@ class TemplateService:
     async def get_file_response(
         cls, file: BytesIO, filename: str, pdf: bool = False
     ) -> Response:
-        """Формирует и возвращает ответ для отправки файла.
+        """Формирует сообщение ответа для отправки файла.
 
         Args:
             file (BytesIO): файл, который должен быть отправлен.
@@ -379,14 +382,14 @@ class TemplateService:
         )
 
     @classmethod
-    async def get_draft(cls, id: idpk, pdf=False) -> Tuple[BytesIO, str]:
+    async def get_draft(cls, id: pk_type, pdf=False) -> Tuple[BytesIO, str]:
         """Возвращает черновик документа в формате docx или pdf.
 
         В черновике все тэги заменены соответствующими наименованиями полей.
         Имя файла filename формируется по полю title шаблона.
 
         Args:
-            id (int): идентификатор шаблона.
+            id (pk_type): идентификатор шаблона.
             pdf (bool): True для формата pdf, False для формата docx.
 
         Returns:
@@ -419,12 +422,12 @@ class TemplateService:
 
     @classmethod
     async def get_preview(
-        cls, id: idpk, field_values: list[dict[int, str]], pdf=False
+        cls, id: pk_type, field_values: list[dict[int, str]], pdf=False
     ) -> Tuple[BytesIO, str]:
         """Возвращает документ с заполненными полями в формате docx или pdf.
 
         Args:
-            id (int): идентификатор шаблона.
+            id (pk_type): идентификатор шаблона.
             field_values (list[dict[str]]): список значений полей в виде
             {"field_id":id, "value":значение}
             pdf (bool): True для формата pdf, False для формата docx.
@@ -438,8 +441,8 @@ class TemplateService:
             ошибочные 'field_id', отсутствующие в полях шаблона.
             TemplateRenderErrorException: при ошибках генерации docx.
             TemplatePdfConvertErrorException: при ошибках генерации pdf.
-        """
 
+        """
         tpl = await cls.get_or_raise_not_found(id)
         fields_dict = {field.id: field for field in tpl.fields}
         context = {}

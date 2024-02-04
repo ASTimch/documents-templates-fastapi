@@ -8,6 +8,7 @@ from app.models.base import (
     FileType,
     ImageType,
     TimestampMixin,
+    pk_type,
     storage_docx,
     storage_thumbnail,
     str_50,
@@ -56,7 +57,7 @@ class TemplateFieldGroup(Base):
 
     __tablename__ = "field_group"
 
-    template_id: Mapped[int] = mapped_column(
+    template_id: Mapped[pk_type] = mapped_column(
         ForeignKey("template.id", ondelete="CASCADE")
     )
     name: Mapped[str]
@@ -83,13 +84,13 @@ class TemplateField(Base):
         default=100
     )  # only positive ?, default = 100
 
-    template_id: Mapped[int] = mapped_column(
+    template_id: Mapped[pk_type] = mapped_column(
         ForeignKey("template.id", ondelete="CASCADE")
     )
-    group_id: Mapped[int] = mapped_column(
+    group_id: Mapped[pk_type] = mapped_column(
         ForeignKey("field_group.id", ondelete="SET NULL"), nullable=True
     )
-    type_id: Mapped[int] = mapped_column(
+    type_id: Mapped[pk_type] = mapped_column(
         ForeignKey("field_type.id", ondelete="RESTRICT")
     )
 
@@ -112,10 +113,10 @@ class Template(TimestampMixin, Base):
 
     __tablename__ = "template"
 
-    owner_id: Mapped[Optional[int]] = mapped_column(
+    owner_id: Mapped[Optional[pk_type]] = mapped_column(
         ForeignKey("user.id", ondelete="SET NULL"), nullable=True
     )
-    category_id: Mapped[Optional[int]] = mapped_column(
+    category_id: Mapped[Optional[pk_type]] = mapped_column(
         ForeignKey("category.id", ondelete="SET NULL"),
         nullable=True,
     )

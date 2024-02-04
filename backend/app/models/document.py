@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlalchemy import ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.models.base import Base, TimestampMixin
+from app.models.base import Base, TimestampMixin, pk_type
 
 if TYPE_CHECKING:
     from app.models.template import Template, TemplateField
@@ -14,10 +14,10 @@ class DocumentField(Base):
     __tablename__ = "document_field"
 
     value: Mapped[Optional[str]] = mapped_column(Text)
-    template_field_id: Mapped[int] = mapped_column(
+    template_field_id: Mapped[pk_type] = mapped_column(
         ForeignKey("template_field.id", ondelete="CASCADE")
     )
-    document_id: Mapped[int] = mapped_column(
+    document_id: Mapped[pk_type] = mapped_column(
         ForeignKey("document.id", ondelete="CASCADE")
     )
 
@@ -32,10 +32,10 @@ class Document(TimestampMixin, Base):
     __tablename__ = "document"
 
     description: Mapped[Optional[str]]
-    template_id: Mapped[int] = mapped_column(
+    template_id: Mapped[pk_type] = mapped_column(
         ForeignKey("template.id", ondelete="CASCADE"), nullable=False
     )
-    owner_id: Mapped[int] = mapped_column(
+    owner_id: Mapped[pk_type] = mapped_column(
         ForeignKey("user.id", ondelete="CASCADE")
     )
     completed: Mapped[bool] = mapped_column(default=False)

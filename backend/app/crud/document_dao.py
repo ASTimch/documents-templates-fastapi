@@ -5,23 +5,28 @@ from sqlalchemy.orm import joinedload, selectinload
 
 from app.crud.base_dao import BaseDAO
 from app.database import async_session_maker
+from app.models.base import pk_type
 from app.models.document import Document, DocumentField
-
-# from app.hotels.schemas import SHotelRead
 from app.models.template import TemplateField
-
-# from app.models.favorite import UserTemplateFavorite
 
 
 class DocumentFieldDAO(BaseDAO):
     model = DocumentField
 
     @classmethod
-    async def get_by_id(cls, model_id: int) -> Optional[DocumentField]:
+    async def get_by_id(cls, id: pk_type) -> Optional[DocumentField]:
+        """Получить поле документа с заданным идентификатором.
+
+        Args:
+            id (pk_type): идентификатор запрашиваемого объекта.
+
+        Returns:
+            Model | None: объект с заданным id.
+        """
         async with async_session_maker() as session:
             query = (
                 select(cls.model)
-                .filter_by(id=model_id)
+                .filter_by(id=id)
                 .options(
                     joinedload(DocumentField.template_field).joinedload(
                         TemplateField.type
@@ -33,6 +38,14 @@ class DocumentFieldDAO(BaseDAO):
 
     @classmethod
     async def get_one_or_none(cls, **filter_by) -> Optional[DocumentField]:
+        """Получить один объект по заданному фильтру.
+
+        Args:
+            filter_by (dict): параметры для поиска объекта.
+
+        Returns:
+            Model | None: объект удовлетворяющий фильтру поиска.
+        """
         async with async_session_maker() as session:
             query = (
                 select(cls.model)
@@ -48,6 +61,14 @@ class DocumentFieldDAO(BaseDAO):
 
     @classmethod
     async def get_all(cls, **filter_by) -> Sequence[DocumentField]:
+        """Получить все объекты по заданному фильтру.
+
+        Args:
+            filter_by (dict): параметры для поиска объектов.
+
+        Returns:
+            list(Model): список объектов, удовлетворяющих фильтру поиска.
+        """
         async with async_session_maker() as session:
             query = (
                 select(cls.model)
@@ -67,6 +88,14 @@ class DocumentDAO(BaseDAO):
 
     @classmethod
     async def get_by_id(cls, model_id: int) -> Optional[Document]:
+        """Получить документ с заданным идентификатором.
+
+        Args:
+            id (pk_type): идентификатор запрашиваемого документа.
+
+        Returns:
+            Document | None: документ с заданным id.
+        """
         async with async_session_maker() as session:
             query = (
                 select(cls.model)
@@ -77,7 +106,6 @@ class DocumentDAO(BaseDAO):
                     .joinedload(DocumentField.template_field)
                     .joinedload(TemplateField.type)
                 )
-                # .options(selectinload(Document.favorited_by_users))
             )
             result: Result = await session.execute(query)
             return result.unique().scalar_one_or_none()
