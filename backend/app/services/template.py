@@ -16,7 +16,7 @@ from app.common.exceptions import (
     TemplateRenderErrorException,
     TypeFieldNotFoundException,
 )
-from app.config import Settings
+from app.config import settings
 from app.crud.template_dao import (
     TemplateDAO,
     TemplateFieldDAO,
@@ -48,8 +48,8 @@ class TemplateService:
     THUMBNAIL_FILENAME_FORMAT = "thumbnail_{id}.png"
     DRAFT_FILENAME_FORMAT = "{name}_шаблон.{ext}"
     PREVIEW_FILENAME_FORMAT = "{name}_preview.{ext}"
-    THUMBNAIL_WIDTH = Settings.THUMBNAIL_WIDTH
-    THUMBNAIL_HEIGHT = Settings.THUMBNAIL_HEIGHT
+    THUMBNAIL_WIDTH = settings.THUMBNAIL_WIDTH
+    THUMBNAIL_HEIGHT = settings.THUMBNAIL_HEIGHT
 
     @classmethod
     def _update_fields_type_by_id(
@@ -192,16 +192,15 @@ class TemplateService:
         else:
             obj_sequence = await TemplateDAO.get_all(deleted=False)
         obj_dto_list = []
+        user_favorites = (
+            set(await TemplateFavoriteService.get_user_favorite_ids(user.id))
+            if user
+            else set()
+        )
         for obj in obj_sequence:
             obj_dto = TemplateReadMinifiedDTO.model_validate(obj)
-            if user:
-                obj_dto.is_favorited = (
-                    await TemplateFavoriteService.is_favorited(user.id, obj.id)
-                )
-                # TODO: оптимизировать кол-во запросов
-                #       один запрос всех избранных шаблонов текущего польз-ля
+            obj_dto.is_favorited = obj.id in user_favorites
             obj_dto_list.append(obj_dto)
-
         return obj_dto_list
 
     @classmethod

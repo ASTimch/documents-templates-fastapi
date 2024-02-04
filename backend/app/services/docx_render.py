@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Any, Dict, Final, List, Tuple
+from typing import Any, Dict, Final, List, Literal, Tuple, TypeAlias
 
 import docxtpl
 import jinja2
@@ -10,6 +10,10 @@ from docxtpl import DocxTemplate
 from num2words import num2words
 
 morph = pymorphy2.MorphAnalyzer()
+
+InflectCase: TypeAlias = Literal[
+    "nomn", "gent", "datv", "accs", "ablt", "loct", "voct"
+]
 
 
 class CustomFilters:
@@ -60,7 +64,11 @@ class CustomFilters:
             return fio
         return fio.title()
 
-    def inflect_word(self, word: str, case: str) -> str:
+    def inflect_word(
+        self,
+        word: str,
+        case: InflectCase,
+    ) -> str:
         """Преобразование слова в заданный падеж
 
         Args:
@@ -82,7 +90,7 @@ class CustomFilters:
             return word
         return p.inflect({case}).word
 
-    def inflect_words(self, words: str, case: str) -> str:
+    def inflect_words(self, words: str, case: InflectCase) -> str:
         """Преобразование каждого из слов в строке в заданный падеж
 
         Args:

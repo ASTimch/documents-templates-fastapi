@@ -26,6 +26,8 @@ class TestTemplateFavoriteService:
             user_id, template_id
         )
         assert not is_favorited, "Неверное is_favorited"
+
+        # Добавление одного шаблона в избранное
         result = await TemplateFavoriteService.add_favorite(
             user_id, template_id
         )
@@ -65,6 +67,12 @@ class TestTemplateFavoriteService:
             user_id, template_id
         )
         assert not is_favorited, "Неверное is_favorited"
+        user_favorites = await TemplateFavoriteService.get_user_favorite_ids(
+            user_id
+        )
+        assert (
+            not user_favorites
+        ), "get_user_favorite_ids вернула не пустой список."
 
         # удаление из избранного (если объекта нет в избранном)
         with pytest.raises(UserTemplateFavoriteDoesNotExistsException):
@@ -76,3 +84,46 @@ class TestTemplateFavoriteService:
         # удаление созданных записей шаблонов
         for id in new_obj_ids:
             await TemplateService.delete(id)
+
+    @pytest.mark.parametrize("user_id", [1, 2])
+    async def test_get_user_favorite_ids(self, user_id):
+        # добавление нескольких объектов в базу
+        new_obj_ids = []
+        for write_data in templates_for_write:
+            write_dto = TemplateWriteDTO(**write_data)
+            new_id = await TemplateService.add(write_dto)
+            new_obj_ids.append(new_id)
+
+        user_favorites = await TemplateFavoriteService.get_user_favorite_ids(
+            user_id
+        )
+        assert (
+            not user_favorites
+        ), "get_user_favorite_ids() вернуло не пустой список"
+
+        expected_user_favorites = []
+        new_template_favorite_objs = []
+        # Добавление по одному шаблону в избранное
+        for template_id in new_obj_ids:
+            obj = await UserTemplateFavoriteDAO.create(
+                user_id=user_id, template_id=template_id
+            )
+            new_template_favorite_objs.append(obj)
+            expected_user_favorites.append(template_id)
+            user_favorites = (
+                await TemplateFavoriteService.get_user_favorite_ids(user_id)
+            )
+            assert (
+                user_favorites == expected_user_favorites
+            ), "get_user_favorite_ids() неверный результат."
+
+        # поочередное удаление шаблонов из избранного
+        for obj in new_template_favorite_objs:
+            await UserTemplateFavoriteDAO.delete_(obj.id)
+            expected_user_favorites.remove(obj.template_id)
+            user_favorites = (
+                await TemplateFavoriteService.get_user_favorite_ids(user_id)
+            )
+            assert (
+                user_favorites == expected_user_favorites
+            ), "get_user_favorite_ids() неверный результат."
