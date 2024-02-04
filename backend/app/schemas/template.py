@@ -3,7 +3,8 @@ from typing import Annotated, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-id_int = Annotated[int, Field(description="Идентификатор")]
+template_id_type = Annotated[int, Field(description="Идентификатор шаблона")]
+id_type = Annotated[int, Field(description="Идентификатор")]
 
 
 class TemplateFieldTypeWriteDTO(BaseModel):
@@ -19,7 +20,7 @@ class TemplateFieldTypeWriteDTO(BaseModel):
 class TemplateFieldTypeReadDTO(TemplateFieldTypeWriteDTO):
     """Тип поля шаблона - чтение"""
 
-    id: id_int
+    id: id_type
 
 
 class TemplateFieldWriteDTO(BaseModel):
@@ -42,7 +43,7 @@ class TemplateFieldReadDTO(TemplateFieldWriteDTO):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: id_int
+    id: id_type
     mask: Annotated[str, Field(description="Маска валидации")]
 
 
@@ -50,7 +51,7 @@ class TemplateFieldWriteValueDTO(BaseModel):
     """Установка значения для поля шаблона"""
 
     model_config = ConfigDict(from_attributes=True)
-    field_id: id_int
+    field_id: id_type
     value: Annotated[str, Field(description="Значение")]
 
 
@@ -78,16 +79,18 @@ class TemplateReadMinifiedDTO(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    id: id_int
+    id: template_id_type
     title: str
     description: str
     created_at: datetime
     updated_at: datetime
     deleted: bool
     category_id: Annotated[
-        Optional[int], Field(title="Категория", default=None)
+        Optional[id_type], Field(title="Категория", default=None)
     ]
-    owner_id: Annotated[Optional[int], Field(title="Владелец", default=None)]
+    owner_id: Annotated[
+        Optional[id_type], Field(title="Владелец", default=None)
+    ]
     # category: Annotated[Optional[int],Field(title="Категория", default=None)]
     # owner: Annotated[Optional[int],Field(title="Владелец", default=None)]
     is_favorited: Annotated[bool, Field(title="В избранном", default=False)]

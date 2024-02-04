@@ -74,3 +74,20 @@ class UserTemplateFavoriteDoesNotExistsException(TemplateException):
 
     status_code = status.HTTP_404_NOT_FOUND
     detail = Messages.FAVORITE_TEMPLATE_DOES_NOT_EXISTS
+
+
+class DocumentException(HTTPException):
+    status_code = 500
+    detail = ""
+
+    def __init__(self, detail=None):
+        if detail:
+            self.detail = detail
+        super().__init__(status_code=self.status_code, detail=self.detail)
+
+
+class DocumentNotFoundException(DocumentException):
+    """Документ не найден."""
+
+    status_code = status.HTTP_404_NOT_FOUND
+    detail = Messages.DOCUMENT_NOT_FOUND
