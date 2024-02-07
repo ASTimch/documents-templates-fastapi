@@ -5,6 +5,7 @@ from sqlalchemy.engine import Result
 
 from app.database import async_session_maker
 from app.models.base import pk_type
+from app.models.user import User
 
 T = TypeVar("T")
 
@@ -124,3 +125,7 @@ class BaseDAO(Generic[T]):
             stmt = delete(cls.model).where(cls.model.id == id)
             await session.execute(stmt)
             await session.commit()
+
+
+class UserDAO(BaseDAO):
+    model = User

@@ -91,3 +91,10 @@ class DocumentNotFoundException(DocumentException):
 
     status_code = status.HTTP_404_NOT_FOUND
     detail = Messages.DOCUMENT_NOT_FOUND
+
+
+class DocumentAccessDeniedException(DocumentException):
+    """Неавторизованный доступ к документу."""
+
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = Messages.ACCESS_DENIED

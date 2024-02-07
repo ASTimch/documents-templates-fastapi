@@ -7,7 +7,7 @@ from app.crud.base_dao import BaseDAO
 from app.database import async_session_maker
 from app.models.base import pk_type
 from app.models.document import Document, DocumentField
-from app.models.template import TemplateField
+from app.models.template import Template, TemplateField
 
 
 class DocumentFieldDAO(BaseDAO):
@@ -100,7 +100,15 @@ class DocumentDAO(BaseDAO):
             query = (
                 select(cls.model)
                 .filter_by(id=model_id)
-                .options(joinedload(Document.template))
+                .options(
+                    joinedload(Document.template)
+                    .options(
+                        selectinload(Template.fields).joinedload(
+                            TemplateField.type
+                        )
+                    )
+                    .options(selectinload(Template.groups))
+                )
                 .options(
                     selectinload(Document.fields)
                     .joinedload(DocumentField.template_field)

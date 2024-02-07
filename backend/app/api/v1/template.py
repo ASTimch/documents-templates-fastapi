@@ -67,8 +67,8 @@ async def add_template(
     data: TemplateWriteDTO, user: User = Depends(current_superuser)
 ) -> Optional[TemplateReadDTO]:
     template_id = await TemplateService.add(data)
-    tempalte_dao = await TemplateService.get(id=template_id)
-    return tempalte_dao
+    template_dao = await TemplateService.get(id=template_id)
+    return template_dao
 
 
 @router.delete(

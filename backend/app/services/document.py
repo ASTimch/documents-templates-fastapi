@@ -1,12 +1,15 @@
 from typing import List, Optional
 
-from app.common.exceptions import DocumentNotFoundException
+from app.common.exceptions import (
+    DocumentAccessDeniedException,
+    DocumentNotFoundException,
+)
 from app.config import settings
 from app.crud.document_dao import DocumentDAO
 from app.models.base import pk_type
 from app.models.document import Document
 from app.models.user import User
-from app.schemas.document import DocumentReadMinifiedDTO
+from app.schemas.document import DocumentReadDTO, DocumentReadMinifiedDTO
 
 
 class DocumentService:
@@ -67,46 +70,48 @@ class DocumentService:
             raise DocumentNotFoundException()
         return obj
 
-    # @classmethod
-    # async def get(
-    #     cls, *, id: pk_type, user: Optional[User] = None
-    # ) -> Optional[DocumentReadDTO]:
-    #     """Возвращает ответ для шаблона с заданным id.
+    @classmethod
+    async def get(
+        cls, *, id: pk_type, user: Optional[User] = None
+    ) -> Optional[DocumentReadDTO]:
+        """Возвращает документ с заданным id с описанием всех его полей.
 
-    #     Args:
-    #         id (int): идентификатор шаблона в б.д.
-    #         user(User): пользователь для которого генерируется ответ.
+        Args:
+            id (int): идентификатор документа в б.д.
+            user(User): пользователь для которого генерируется ответ.
 
-    #     Returns:
-    #         TemplateReadDTO: все поля шаблона и описание его полей.
+        Returns:
+            DocumentReadDTO: документ со всеми полями и их описанием.
 
-    #     Raises:
-    #         TemplateNotFoundException: если шаблон с заданным id
-    #         отсутствует или удален.
-    #     """
-    #     obj = await cls.get_or_raise_not_found(id)
-    #     groups_dicts = {group.id: group.to_dict() for group in obj.groups}
-    #     ungrouped_fields = []
-    #     for field in obj.fields:
-    #         field_dict = field.to_dict()
-    #         field_dict["type"] = field.type.type
-    #         field_dict["mask"] = field.type.mask
-    #         group_dict = groups_dicts.get(field.group_id)
-    #         if group_dict:
-    #             fields = group_dict.setdefault("fields", [])
-    #             fields.append(field_dict)
-    #         else:
-    #             ungrouped_fields.append(field_dict)
-
-    #     obj_dict = obj.to_dict()
-    #     obj_dict["grouped_fields"] = groups_dicts.values()
-    #     obj_dict["ungrouped_fields"] = ungrouped_fields
-    #     # формирование is_favorited (в 'избранном' текущего пользователя)
-    #     if user:
-    #         obj_dict["is_favorited"] = (
-    #             await TemplateFavoriteService.is_favorited(user.id, obj.id)
-    #         )
-    #     return TemplateReadDTO.model_validate(obj_dict)
+        Raises:
+            DocumentNotFoundException: документ с заданным id не найден.
+            DocumentAccessDeniedException: неавторизованный доступ.
+        """
+        obj = await cls.get_or_raise_not_found(id)
+        # запрет доступа всем, кроме владельца документа
+        if obj.owner_id != user.id:
+            raise DocumentAccessDeniedException()
+        groups_dicts = {
+            group.id: group.to_dict() for group in obj.template.groups
+        }
+        field_values = {
+            field.template_field_id: field.value for field in obj.fields
+        }
+        ungrouped_fields = []
+        for field in obj.template.fields:
+            field_dict = field.to_dict()
+            field_dict["type"] = field.type.type
+            field_dict["mask"] = field.type.mask
+            field_dict["value"] = field_values.get(field.id, None)
+            group_dict = groups_dicts.get(field.group_id)
+            if group_dict:
+                group_dict.setdefault("fields", []).append(field_dict)
+            else:
+                ungrouped_fields.append(field_dict)
+        obj_dict = obj.to_dict()
+        obj_dict["grouped_fields"] = groups_dicts.values()
+        obj_dict["ungrouped_fields"] = ungrouped_fields
+        return DocumentReadDTO.model_validate(obj_dict)
 
     @classmethod
     async def get_all(

@@ -162,7 +162,6 @@ class TestTemplateService:
             )
         expected_name = f"tpl_{tpl_id}.docx"
         expected_path = settings.TEMPLATE_DOCX_DIR + expected_name
-        print(expected_name)
         tpl = await TemplateDAO.get_by_id(tpl_id)
         assert tpl.filename, "Шаблон не загружен"
         assert tpl.filename.name == expected_name, "Ошибочное имя docx"
