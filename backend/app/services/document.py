@@ -1,15 +1,19 @@
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from app.common.exceptions import (
     DocumentAccessDeniedException,
     DocumentNotFoundException,
 )
 from app.config import settings
-from app.crud.document_dao import DocumentDAO
+from app.crud.document_dao import DocumentDAO, DocumentFieldDAO
 from app.models.base import pk_type
 from app.models.document import Document
 from app.models.user import User
-from app.schemas.document import DocumentReadDTO, DocumentReadMinifiedDTO
+from app.schemas.document import (
+    DocumentReadDTO,
+    DocumentReadMinifiedDTO,
+    DocumentWriteDTO,
+)
 
 
 class DocumentService:
@@ -19,37 +23,50 @@ class DocumentService:
     THUMBNAIL_WIDTH = settings.THUMBNAIL_WIDTH
     THUMBNAIL_HEIGHT = settings.THUMBNAIL_HEIGHT
 
-    # @classmethod
-    # async def add(cls, obj: TemplateWriteDTO) -> Optional[pk_type]:
-    #     """Добавить новый шаблон в б.д.
+    @classmethod
+    def _update_fields_document_id(
+        cls, fields: list[dict[str, Any]], document_id: pk_type
+    ) -> None:
+        """Назначение всем полям родительского документа document_id.
 
-    #     Returns:
-    #         pk_type: идентификатор созданного объекта шаблон.
-    #     """
-    #     type_id_mapping = (
-    #         await TemplateFieldTypeService.get_all_type_id_mapping()
-    #     )
-    #     obj_dict = obj.model_dump()
-    #     group_dicts = obj_dict.pop("grouped_fields")
-    #     field_dicts = obj_dict.pop("ungrouped_fields")
-    #     for group in group_dicts:
-    #         cls._update_fields_type_by_id(group["fields"], type_id_mapping)
-    #     cls._update_fields_type_by_id(field_dicts, type_id_mapping)
+        Args:
+            fields (list[dict]): список описаний полей вида:
+            {"id":<идентификатор поля>, "value": <значение>}
 
-    #     # создание шаблона (без полей)
-    #     template = await TemplateDAO.create(**obj_dict)
-    #     # создание групп полей
-    #     for group in group_dicts:
-    #         cls._update_fields_template_id(group["fields"], template.id)
-    #         group["fields"] = await TemplateFieldDAO.create_list(
-    #             group["fields"]
-    #         )
-    #         group["template_id"] = template.id
-    #     await TemplateFieldGroupDAO.create_list(group_dicts)
-    #     # создание несгруппированных полей
-    #     cls._update_fields_template_id(field_dicts, template.id)
-    #     await TemplateFieldDAO.create_list(field_dicts)
-    #     return template.id
+            document_id (pk_type): идентификатор родительского документа.
+
+        After:
+            Каждый элемент fields преобразуется к виду::
+
+            {
+                "template_field_id":<идентификатор поля>,
+                "value": <значение>,
+                "document_id": document_id
+            }
+        """
+        for field in fields:
+            id = field.pop("field_id")
+            field["template_field_id"] = id
+            field["document_id"] = document_id
+
+    @classmethod
+    async def add(
+        cls, obj: DocumentWriteDTO, owner: User
+    ) -> Optional[pk_type]:
+        """Сохранить новый документ.
+
+        Returns:
+            pk_type: идентификатор созданного объекта документ.
+        """
+        obj_dict = obj.model_dump()
+        obj_dict["owner_id"] = owner.id
+        fields = obj_dict.pop("fields")
+        # создание документа (без полей)
+        document = await DocumentDAO.create(**obj_dict)
+        # создание полей
+        cls._update_fields_document_id(fields, document.id)
+        await DocumentFieldDAO.create_list(fields)
+        return document.id
 
     @classmethod
     async def get_or_raise_not_found(cls, id: pk_type) -> Optional[Document]:
@@ -72,7 +89,7 @@ class DocumentService:
 
     @classmethod
     async def get(
-        cls, *, id: pk_type, user: Optional[User] = None
+        cls, *, id: pk_type, user: User
     ) -> Optional[DocumentReadDTO]:
         """Возвращает документ с заданным id с описанием всех его полей.
 

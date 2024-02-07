@@ -547,27 +547,27 @@ documents_for_write = [
         "completed": True,
         "fields": [
             {
-                "id": 1,
+                "field_id": 1,
                 "value": "Значение поля 1",
             },
             {
-                "id": 2,
+                "field_id": 2,
                 "value": "Значение поля 2",
             },
             {
-                "id": 3,
+                "field_id": 3,
                 "value": "Значение поля 3",
             },
             {
-                "id": 4,
+                "field_id": 4,
                 "value": "Значение поля 4",
             },
             {
-                "id": 5,
+                "field_id": 5,
                 "value": "Значение поля 5",
             },
             {
-                "id": 6,
+                "field_id": 6,
                 "value": "Значение поля 6",
             },
         ],
@@ -579,27 +579,27 @@ documents_for_write = [
         "completed": False,
         "fields": [
             {
-                "id": 1,
+                "field_id": 1,
                 "value": "Значение поля 11",
             },
             {
-                "id": 2,
+                "field_id": 2,
                 "value": "Значение поля 12",
             },
             {
-                "id": 3,
+                "field_id": 3,
                 "value": "Значение поля 13",
             },
             {
-                "id": 4,
+                "field_id": 4,
                 "value": "Значение поля 14",
             },
             {
-                "id": 5,
+                "field_id": 5,
                 "value": "Значение поля 15",
             },
             {
-                "id": 6,
+                "field_id": 6,
                 "value": None,
             },
         ],

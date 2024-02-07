@@ -1,0 +1,55 @@
+@URL = http://127.0.0.1:8000
+
+###
+GET {{URL}}/api/v1/document/1
+{
+}
+
+###
+POST {{URL}}/api/v1/document/
+Content-Type: application/json
+# Authorization: {{TOKEN}}
+
+{
+      "description": "Заявление на отпуск 1",
+      "template_id": 11,
+      "completed": true,
+      "fields": [
+        {
+          "value": "генеральный директор",
+          "field_id": 19
+        },
+        {
+          "value": "ООО АйТиСолюшенс",
+          "field_id": 20
+        },
+        {
+          "value": "Иванова Ирина Петровна",
+          "field_id": 21
+        },
+        {
+          "value": "Python разработчик",
+          "field_id": 22
+        },
+        {
+          "value": "Иванов Иван Иванович",
+          "field_id": 23
+        },
+        {
+          "value": "14",
+          "field_id": 24
+        },
+        {
+          "value": "10.02.2024",
+          "field_id": 25
+        },
+        {
+          "value": "30000",
+          "field_id": 26
+        },
+        {
+          "value": "01.02.2023",
+          "field_id": 27
+        }
+      ]
+}

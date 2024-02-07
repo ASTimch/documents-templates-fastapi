@@ -64,6 +64,15 @@ class DocumentReadDTO(DocumentReadMinifiedDTO):
     """Чтение документа в полном виде с полями."""
 
     # model_config = ConfigDict(from_attributes=True)
-
     grouped_fields: Optional[list[DocumentFieldGroupReadDTO]]
     ungrouped_fields: Optional[list[DocumentFieldReadDTO]]
+
+
+class DocumentWriteDTO(BaseModel):
+    """Запись документа в полном виде с полями."""
+
+    model_config = ConfigDict(from_attributes=True)
+    description: Annotated[str, Field(description="Наименование документа")]
+    template_id: template_id_type
+    completed: Annotated[bool, Field(description="Завершен", default=None)]
+    fields: Optional[list[DocumentFieldWriteValueDTO]]
