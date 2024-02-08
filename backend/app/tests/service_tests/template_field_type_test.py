@@ -139,8 +139,8 @@ class TestFieldTypeService:
                 not obj_dto
             ), "Добавление типа дубликата не вызвало исключение"
 
-    @pytest.mark.parametrize(*template_field_type_mock)
-    async def test_get_all_type_id_mapping(self, id, type, name, mask):
+    # @pytest.mark.parametrize(*template_field_type_mock)
+    async def test_get_all_type_id_mapping(self):
         type_id_mapping = (
             await TemplateFieldTypeService.get_all_type_id_mapping()
         )

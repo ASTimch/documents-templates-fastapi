@@ -1,6 +1,8 @@
 from typing import Any
 
 import pytest
+import sqlalchemy
+from icecream import ic
 
 from app.common.exceptions import (
     DocumentAccessDeniedException,
@@ -27,9 +29,6 @@ from app.tests.fixtures import (
     inconsistent_documents,
     templates_for_read,
 )
-
-# from icecream import ic
-
 
 # users_ids
 active_user_id = 1
@@ -69,9 +68,16 @@ async def prepare_templates():
         #         f" COALESCE((SELECT MAX(id) FROM {table_name}),1));"
         #     )
         # )
+        # reset template.id and template_field.id
+        await session.execute(
+            sqlalchemy.text("ALTER SEQUENCE template_id_seq RESTART;")
+        )
+        await session.execute(
+            sqlalchemy.text("ALTER SEQUENCE template_field_id_seq RESTART;")
+        )
         await session.commit()
-    for tpl in templates_for_read:
-        await TemplateService.add(TemplateWriteDTO(**tpl))
+    for id, tpl in enumerate(templates_for_read, start=1):
+        assert id == await TemplateService.add(TemplateWriteDTO(**tpl))
 
 
 class TestDocumentService:
