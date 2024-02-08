@@ -607,3 +607,41 @@ documents_for_write = [
         ],
     },
 ]
+
+inconsistent_documents = [
+    {
+        "template_id": 100,
+        "description": "Шаблон не существует",
+        "owner_id": 1,
+        "completed": False,
+        "fields": [],
+    },
+    {
+        "template_id": 1,
+        "description": "Шаблон существует",
+        "owner_id": 1,
+        "completed": False,
+        "fields": [
+            {
+                "field_id": 1,
+                "value": "Значение поля 1",
+            },
+            {
+                "field_id": 12,
+                "value": "Поле чужого шаблона",
+            },
+            {
+                "field_id": 13,
+                "value": "Поле чужого шаблона",
+            },
+            {
+                "field_id": 4,
+                "value": "Значение поля 4",
+            },
+            {
+                "field_id": 5,
+                "value": "Значение поля 5",
+            },
+        ],
+    },
+]

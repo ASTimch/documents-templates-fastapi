@@ -1,23 +1,15 @@
-import os.path
 from typing import Any
 
 import pytest
-import sqlalchemy
-from fastapi import UploadFile
-from icecream import ic
 
 from app.common.exceptions import (
     DocumentAccessDeniedException,
+    DocumentConflictException,
     DocumentNotFoundException,
-    TemplateAlreadyDeletedException,
-    TemplateNotFoundException,
-    TypeFieldNotFoundException,
 )
 from app.config import settings
 from app.crud.base_dao import UserDAO
-from app.crud.document_dao import DocumentDAO
-from app.crud.template_dao import TemplateDAO
-from app.database import async_session_maker, engine
+from app.database import async_session_maker
 from app.models.document import Document, DocumentField
 from app.models.template import Template, TemplateField
 from app.models.user import User
@@ -26,24 +18,23 @@ from app.schemas.document import (
     DocumentReadMinifiedDTO,
     DocumentWriteDTO,
 )
-from app.schemas.template import TemplateReadDTO, TemplateWriteDTO
+from app.schemas.template import TemplateWriteDTO
 from app.services.document import DocumentService
 from app.services.template import TemplateService
 from app.tests.fixtures import (
     documents_for_read,
     documents_for_write,
-    template_with_invalid_type_field,
+    inconsistent_documents,
     templates_for_read,
-    templates_for_write,
 )
 
+# from icecream import ic
+
+
+# users_ids
 active_user_id = 1
 admin_user_id = 2
 inactive_user_id = 3
-# users
-# active_user = await UserDAO.get_by_id(1)
-# admin_user = await UserDAO.get_by_id(2)
-# inactive_user = await UserDAO.get_by_id(3)
 
 
 @pytest.fixture(autouse=True, scope="class")
@@ -136,6 +127,10 @@ class TestDocumentService:
         with pytest.raises(DocumentNotFoundException):
             await DocumentService.get(id=100, user=active_user)
 
+    async def test_delete_invalid_id_raises_exception(self, active_user):
+        with pytest.raises(DocumentNotFoundException):
+            await DocumentService.delete(id=100, user=active_user)
+
     @pytest.mark.parametrize(
         "documents_for_write, documents_for_read",
         [(documents_for_write, documents_for_read)],
@@ -184,6 +179,17 @@ class TestDocumentService:
             with pytest.raises(DocumentNotFoundException):
                 await DocumentService.get(id=id, user=active_user)
 
+    @pytest.mark.parametrize("documents", (inconsistent_documents,))
+    async def test_add_raises_exception_for_inconsistent_request(
+        self,
+        documents: dict[str, Any],
+        active_user,
+    ):
+        # create documents for simple User
+        for doc in documents:
+            with pytest.raises(DocumentConflictException):
+                await DocumentService.add(DocumentWriteDTO(**doc), active_user)
+
     @pytest.mark.parametrize(
         "documents_for_write, documents_for_read",
         [(documents_for_write, documents_for_read)],
@@ -193,7 +199,6 @@ class TestDocumentService:
         documents_for_write: dict[str, Any],
         documents_for_read: dict[str, Any],
         active_user,
-        admin_user,
     ):
         # create documents for simple User
         doc_ids = [
@@ -217,10 +222,7 @@ class TestDocumentService:
         for id in doc_ids:
             await DocumentService.delete(id, active_user)
 
-    @pytest.mark.parametrize(
-        "documents_for_write",
-        (documents_for_write,),
-    )
+    @pytest.mark.parametrize("documents_for_write", (documents_for_write,))
     async def test_add_for_inactive_user(
         self,
         documents_for_write: dict[str, Any],
@@ -232,53 +234,3 @@ class TestDocumentService:
                 await DocumentService.add(
                     DocumentWriteDTO(**doc), inactive_user
                 )
-
-    # async def test_get_all_and_delete(self):
-    #     db_len = len(await TemplateService.get_all())
-    #     db_with_deleted_len = len(
-    #         await TemplateService.get_all(include_deleted=True)
-    #     )
-    #     # добавление нескольких объектов в базу
-    #     new_obj_ids = []
-    #     for write_data in templates_for_write:
-    #         write_dto = TemplateWriteDTO(**write_data)
-    #         new_id = await TemplateService.add(write_dto)
-    #         assert new_id, "Функция не вернула id нового объекта"
-    #         new_obj_ids.append(new_id)
-    #     new_db_len = len(await TemplateService.get_all())
-    #     assert (
-    #         db_len + len(templates_for_read) == new_db_len
-    #     ), "Объекты не добавлены в базу"
-
-    #     # проверка их наличия в базе
-    #     expected_dtos = [TemplateReadDTO(**x) for x in templates_for_read]
-    #     for id, expected_dto in zip(new_obj_ids, expected_dtos):
-    #         await self._check_template_by_id(id, expected_dto)
-
-    #     # удаление созданных записей
-    #     for id in new_obj_ids:
-    #         await TemplateService.delete(id)
-    #         with pytest.raises(TemplateNotFoundException):
-    #             obj_db = await TemplateService.get(id=id)
-    #             assert not obj_db, "Объект не удален из базы"
-    #     # проверка количества записей в б.д.
-    #     new_db_len = len(await TemplateService.get_all())
-    #     new_db_with_deleted_len = len(
-    #         await TemplateService.get_all(include_deleted=True)
-    #     )
-    #     assert (
-    #         db_len == new_db_len
-    #     ), "Кол-во записей в б.д. не соответствует ожидаемым"
-    #     assert new_db_with_deleted_len == db_with_deleted_len + len(
-    #         new_obj_ids
-    #     )
-
-    # async def test_post_invalid_type_raises_exception(self):
-    #     new_obj = TemplateWriteDTO(**template_with_invalid_type_field)
-    #     with pytest.raises(TypeFieldNotFoundException):
-    #         new_id = await TemplateService.add(new_obj)
-    #         assert new_id, "Создан объект с ошибочным типом"
-
-    # async def test_delete_invalid_id_raises_exception(self):
-    #     with pytest.raises(TemplateNotFoundException):
-    #         await TemplateService.delete(id=100)

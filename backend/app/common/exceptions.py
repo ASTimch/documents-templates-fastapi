@@ -98,3 +98,10 @@ class DocumentAccessDeniedException(DocumentException):
 
     status_code = status.HTTP_403_FORBIDDEN
     detail = Messages.ACCESS_DENIED
+
+
+class DocumentConflictException(DocumentException):
+    """Конфликт при создании документа."""
+
+    status_code = status.HTTP_409_CONFLICT
+    detail = Messages.DOCUMENT_CONFLICT

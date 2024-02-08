@@ -1,8 +1,11 @@
 from typing import Any, List, Optional
 
+from app.common.constants import Messages
 from app.common.exceptions import (
     DocumentAccessDeniedException,
+    DocumentConflictException,
     DocumentNotFoundException,
+    TemplateNotFoundException,
 )
 from app.config import settings
 from app.crud.document_dao import DocumentDAO, DocumentFieldDAO
@@ -14,6 +17,7 @@ from app.schemas.document import (
     DocumentReadMinifiedDTO,
     DocumentWriteDTO,
 )
+from app.services.template import TemplateService
 
 
 class DocumentService:
@@ -24,6 +28,40 @@ class DocumentService:
     THUMBNAIL_HEIGHT = settings.THUMBNAIL_HEIGHT
 
     @classmethod
+    async def _check_document_consistency(cls, dto: DocumentWriteDTO) -> None:
+        """Проверка согласованности полей в запросе создания документа.
+
+        Все поля должны принадлежать заданному существующему шаблону.
+
+        Args:
+            dto (DocumentWriteDTO): объект для создания документа.
+
+        Raises:
+            DocumentConflictException: несогласованность полей.
+        """
+        # проверка, что шаблон с заданным template_id существут
+        try:
+            tpl_obj = await TemplateService.get_or_raise_not_found(
+                dto.template_id
+            )
+        except TemplateNotFoundException:
+            raise DocumentConflictException(
+                detail=Messages.TEMPLATE_ID_NOT_FOUND.format(dto.template_id)
+            )
+        # проверка, что все поля принадлежат этому шаблону
+        tpl_field_ids = {field.id for field in tpl_obj.fields}
+        if wrong_field_ids := [
+            field.field_id
+            for field in dto.fields
+            if field.field_id not in tpl_field_ids
+        ]:
+            raise DocumentConflictException(
+                detail=Messages.DOCUMENT_WRONG_FIELDS.format(
+                    fields=wrong_field_ids, tpl=dto.template_id
+                )
+            )
+
+    @classmethod
     def _update_fields_document_id(
         cls, fields: list[dict[str, Any]], document_id: pk_type
     ) -> list[dict[str, Any]]:
@@ -31,7 +69,7 @@ class DocumentService:
 
         Args:
             fields (list[dict]): список описаний полей вида:
-            {"id":<идентификатор поля>, "value": <значение>}
+            {"field_id":<идентификатор поля>, "value": <значение>}
 
             document_id (pk_type): идентификатор родительского документа.
 
@@ -64,10 +102,14 @@ class DocumentService:
 
         Raises:
             DocumentAccessDeniedException: если пользователь деактивирован.
+            DocumentConflictException: при несогласованности в полях документа.
         """
         # запрет создания документа для неактивных пользователей
         if not owner.is_active:
             raise DocumentAccessDeniedException()
+        # проверка консистентности (template_id и field_id)
+        await cls._check_document_consistency(obj)
+
         obj_dict = obj.model_dump()
         obj_dict["owner_id"] = owner.id
         fields = obj_dict.pop("fields")

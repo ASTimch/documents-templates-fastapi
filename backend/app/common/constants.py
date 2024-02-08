@@ -8,6 +8,9 @@ class Messages:
     FIELD_NOT_FOUND: Final = "Поле не найдено"
     GROUP_NOT_FOUND: Final = "Группа полей не найдена"
     TEMPLATE_NOT_FOUND: Final = "Шаблон не найден"
+    TEMPLATE_ID_NOT_FOUND: Final = (
+        "Шаблон с идентификатором {} отсутствует или удален"
+    )
     DOCUMENT_NOT_FOUND: Final = "Документ не найден"
     TEMPLATE_FIELD_NOT_FOUND: Final = (
         "Поле {field_id} шаблона {template_id} не найдено"
@@ -39,3 +42,7 @@ class Messages:
         "Шаблон уже содержится в избранном"
     )
     FAVORITE_TEMPLATE_DOES_NOT_EXISTS: Final = "Шаблон не найден в избранном"
+    DOCUMENT_CONFLICT: Final = "Ошибка при создании документа."
+    DOCUMENT_WRONG_FIELDS: Final = (
+        "Ошибка: поля {fields} не принадлежат шаблону {tpl}"
+    )
