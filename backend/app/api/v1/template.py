@@ -165,7 +165,7 @@ async def add_template_to_favorite(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Удалить шаблон из избранного",
 )
-async def delete_template(
+async def delete_template_from_favorite(
     template_id: int, user: User = Depends(current_active_user)
 ):
     template_dao = await TemplateService.get(id=template_id)

@@ -20,10 +20,6 @@ class TemplateFieldTypeDAO(BaseDAO):
 
 
 class TemplateFieldGroupDAO(BaseDAO):
-    model = TemplateFieldType
-
-
-class TemplateFieldGroupDAO(BaseDAO):
     model = TemplateFieldGroup
 
 

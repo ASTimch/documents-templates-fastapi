@@ -2,7 +2,7 @@ from typing import Any
 
 import pytest
 import sqlalchemy
-from icecream import ic
+from icecream import ic  # noqa
 
 from app.common.exceptions import (
     DocumentAccessDeniedException,

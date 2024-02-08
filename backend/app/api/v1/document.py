@@ -1,13 +1,8 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Response, UploadFile, status
+from fastapi import APIRouter, Depends, status
 
-from app.auth import (
-    current_active_user,
-    current_superuser,
-    current_user_or_none,
-)
-from app.models.base import pk_type
+from app.auth import current_active_user
 from app.models.user import User
 from app.schemas.document import (
     DocumentReadDTO,

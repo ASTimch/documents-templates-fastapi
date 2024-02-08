@@ -5,15 +5,13 @@ from sqlalchemy import engine_from_config, pool
 
 from app.config import settings
 from app.models.base import Base
-from app.models.document import Document, DocumentField
-from app.models.favorite import UserTemplateFavorite
-from app.models.template import (
-    Template,
-    TemplateField,
-    TemplateFieldGroup,
-    TemplateFieldType,
-)
-from app.models.user import User
+from app.models.document import Document, DocumentField  # noqa
+from app.models.favorite import UserTemplateFavorite  # noqa
+from app.models.template import Template  # noqa
+from app.models.template import TemplateField  # noqa
+from app.models.template import TemplateFieldGroup  # noqa
+from app.models.template import TemplateFieldType  # noqa
+from app.models.user import User  # noqa
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
