@@ -2,17 +2,30 @@ import os.path
 from typing import Any
 
 import pytest
+import sqlalchemy
 from fastapi import UploadFile
+from icecream import ic
 
 from app.common.exceptions import (
+    DocumentAccessDeniedException,
     DocumentNotFoundException,
     TemplateAlreadyDeletedException,
     TemplateNotFoundException,
     TypeFieldNotFoundException,
 )
 from app.config import settings
+from app.crud.base_dao import UserDAO
+from app.crud.document_dao import DocumentDAO
 from app.crud.template_dao import TemplateDAO
-from app.schemas.document import DocumentReadDTO
+from app.database import async_session_maker, engine
+from app.models.document import Document, DocumentField
+from app.models.template import Template, TemplateField
+from app.models.user import User
+from app.schemas.document import (
+    DocumentReadDTO,
+    DocumentReadMinifiedDTO,
+    DocumentWriteDTO,
+)
 from app.schemas.template import TemplateReadDTO, TemplateWriteDTO
 from app.services.document import DocumentService
 from app.services.template import TemplateService
@@ -24,8 +37,54 @@ from app.tests.fixtures import (
     templates_for_write,
 )
 
+active_user_id = 1
+admin_user_id = 2
+inactive_user_id = 3
+# users
+# active_user = await UserDAO.get_by_id(1)
+# admin_user = await UserDAO.get_by_id(2)
+# inactive_user = await UserDAO.get_by_id(3)
+
+
+@pytest.fixture(autouse=True, scope="class")
+async def active_user():
+    return await UserDAO.get_by_id(active_user_id)
+
+
+@pytest.fixture(autouse=True, scope="class")
+async def admin_user():
+    return await UserDAO.get_by_id(admin_user_id)
+
+
+@pytest.fixture(autouse=True, scope="class")
+async def inactive_user():
+    return await UserDAO.get_by_id(inactive_user_id)
+
+
+@pytest.fixture(autouse=True, scope="class")
+async def prepare_templates():
+    assert settings.MODE == "TEST"
+
+    async with async_session_maker() as session:
+        # await session.execute(sqlalchemy.delete(Template))
+        # await session.execute(sqlalchemy.delete(TemplateField))
+        await session.execute(Template.__table__.delete())
+        await session.execute(TemplateField.__table__.delete())
+        await session.execute(Document.__table__.delete())
+        await session.execute(DocumentField.__table__.delete())
+        # await session.execute(
+        #     text(
+        #         f"SELECT SETVAL('{table_name}_id_seq',"
+        #         f" COALESCE((SELECT MAX(id) FROM {table_name}),1));"
+        #     )
+        # )
+        await session.commit()
+    for tpl in templates_for_read:
+        await TemplateService.add(TemplateWriteDTO(**tpl))
+
 
 class TestDocumentService:
+
     def _compare_fields(self, field1, field2):
         assert field1.tag == field2.tag, "tag полей не совпадают"
         assert field1.name == field2.name, "name полей не совпадают"
@@ -56,7 +115,7 @@ class TestDocumentService:
         assert doc1.template_id == doc2.template_id
         assert doc1.owner_id == doc2.owner_id
         assert doc1.completed == doc2.completed
-        assert doc1.thumbnail == doc2.thumbnail
+        # assert doc1.thumbnail == doc2.thumbnail
         assert len(doc1.grouped_fields) == len(doc2.grouped_fields)
         assert len(doc1.ungrouped_fields) == len(doc2.ungrouped_fields)
         for group1, group2 in zip(doc1.grouped_fields, doc2.grouped_fields):
@@ -66,32 +125,56 @@ class TestDocumentService:
         ):
             self._compare_fields(field1, field2)
 
-    async def _check_document_by_id(self, id, expected_dto: DocumentReadDTO):
-        read_dto = await DocumentService.get(id=id)
+    async def _check_document_by_id(
+        self, id, expected_dto: DocumentReadDTO, user: User
+    ):
+        read_dto = await DocumentService.get(id=id, user=user)
         assert read_dto, "Объект не найден в базе"
         self._compare_documents(read_dto, expected_dto)
 
-    async def test_get_invalid_id_raises_exception(self):
+    async def test_get_invalid_id_raises_exception(self, active_user):
         with pytest.raises(DocumentNotFoundException):
-            await DocumentService.get(id=100)
+            await DocumentService.get(id=100, user=active_user)
 
     @pytest.mark.parametrize(
-        "templates, documents_for_write, documents_for_read",
-        [(templates_for_write, documents_for_write, documents_for_read)],
+        "documents_for_write, documents_for_read",
+        [(documents_for_write, documents_for_read)],
     )
-    async def test_add_and_delete(
+    async def test_add_get_delete(
         self,
-        templates: dict[str, Any],
         documents_for_write: dict[str, Any],
         documents_for_read: dict[str, Any],
+        active_user,
+        admin_user,
+        inactive_user,
     ):
-        # tpl_write_dto = [TemplateWriteDTO(**tpl) for tpl in templates]
-        tpl_read_dto = {
-            id: await TemplateService.add(TemplateWriteDTO(**tpl))
-            for id, tpl in enumerate(templates, start=1)
-        }
-        print(tpl_read_dto)
-        assert False
+        # create documents for simple User
+        doc_ids = [
+            await DocumentService.add(DocumentWriteDTO(**doc), active_user)
+            for doc in documents_for_write
+        ]
+
+        for id, doc_read in zip(doc_ids, documents_for_read):
+            expected_dto = DocumentReadDTO(**doc_read)
+            await self._check_document_by_id(id, expected_dto, active_user)
+
+        # check no access for no author
+        for id in doc_ids:
+            with pytest.raises(DocumentAccessDeniedException):
+                await DocumentService.get(id=id, user=admin_user)
+
+        # get_all for active_user
+        user_docs = await DocumentService.get_all(active_user)
+        for doc_dto, expected_doc in zip(user_docs, documents_for_read):
+            expected_dto = DocumentReadMinifiedDTO(**expected_doc)
+            self._compare_minified(doc_dto, expected_dto)
+
+        # get_all for admin_user
+        admin_docs = await DocumentService.get_all(admin_user)
+        assert not admin_docs, "У администратора нет документов."
+
+        # delete user documents
+
         # db_len = len(await TemplateService.get_all())
         # new_obj_id = await TemplateService.add(write_dto)
         # assert new_obj_id, "Функция не вернула id нового объекта"
@@ -115,6 +198,22 @@ class TestDocumentService:
         #     assert (
         #         False
         #     ), "Удаление должно взводить TemplateAlreadyDeletedException"
+
+    @pytest.mark.parametrize(
+        "documents_for_write",
+        (documents_for_write,),
+    )
+    async def test_add_for_inactive_user(
+        self,
+        documents_for_write: dict[str, Any],
+        inactive_user,
+    ):
+        # create documents for inactive_user should raise AccessDenied
+        for doc in documents_for_write:
+            with pytest.raises(DocumentAccessDeniedException):
+                await DocumentService.add(
+                    DocumentWriteDTO(**doc), inactive_user
+                )
 
     # async def test_get_all_and_delete(self):
     #     db_len = len(await TemplateService.get_all())

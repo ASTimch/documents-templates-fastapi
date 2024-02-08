@@ -16,5 +16,14 @@
         "is_active": true,
         "is_superuser": true,
         "is_verified": false
+    },
+    {
+        "id": 3,
+        "email": "user_inactive@example.com",
+        "hashed_password": "$2b$12$cSm5qwqXtDsvZNziHKHOG.TEN8.w91QxsJnxKkXtHC9CXqWbstbT2",
+        "name": "UserInactiveName",
+        "is_active": false,
+        "is_superuser": false,
+        "is_verified": false
     }
 ]

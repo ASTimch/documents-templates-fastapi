@@ -32,7 +32,7 @@ class DocumentFieldWriteValueDTO(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
     field_id: id_type
-    value: Annotated[str, Field(description="Значение")]
+    value: Annotated[Optional[str], Field(description="Значение")]
 
 
 class DocumentFieldGroupReadDTO(BaseModel):

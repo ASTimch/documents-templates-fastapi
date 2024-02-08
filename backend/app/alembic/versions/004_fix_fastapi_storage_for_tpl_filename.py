@@ -8,7 +8,7 @@ Create Date: 2023-12-21 16:15:32.461268
 
 from typing import Sequence, Union
 
-import sqlalchemy as sa
+import sqlalchemy as sa  # noqa
 from alembic import op
 
 # import path_to_custom_types_py_file

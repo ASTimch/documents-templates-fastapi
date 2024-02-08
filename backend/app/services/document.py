@@ -26,7 +26,7 @@ class DocumentService:
     @classmethod
     def _update_fields_document_id(
         cls, fields: list[dict[str, Any]], document_id: pk_type
-    ) -> None:
+    ) -> list[dict[str, Any]]:
         """Назначение всем полям родительского документа document_id.
 
         Args:
@@ -35,7 +35,8 @@ class DocumentService:
 
             document_id (pk_type): идентификатор родительского документа.
 
-        After:
+        Returns:
+            Преобразованный список полей. Исключены все поля с "value"=None
             Каждый элемент fields преобразуется к виду::
 
             {
@@ -44,10 +45,13 @@ class DocumentService:
                 "document_id": document_id
             }
         """
+        updated_fields = []
         for field in fields:
-            id = field.pop("field_id")
-            field["template_field_id"] = id
+            field["template_field_id"] = field.pop("field_id")
             field["document_id"] = document_id
+            if field["value"] is not None:
+                updated_fields.append(field)
+        return updated_fields
 
     @classmethod
     async def add(
@@ -57,14 +61,20 @@ class DocumentService:
 
         Returns:
             pk_type: идентификатор созданного объекта документ.
+
+        Raises:
+            DocumentAccessDeniedException: если пользователь деактивирован.
         """
+        # запрет создания документа для неактивных пользователей
+        if not owner.is_active:
+            raise DocumentAccessDeniedException()
         obj_dict = obj.model_dump()
         obj_dict["owner_id"] = owner.id
         fields = obj_dict.pop("fields")
         # создание документа (без полей)
         document = await DocumentDAO.create(**obj_dict)
         # создание полей
-        cls._update_fields_document_id(fields, document.id)
+        fields = cls._update_fields_document_id(fields, document.id)
         await DocumentFieldDAO.create_list(fields)
         return document.id
 
@@ -132,7 +142,7 @@ class DocumentService:
 
     @classmethod
     async def get_all(
-        cls, user: Optional[User] = None
+        cls, user: User, **filter_by: Any
     ) -> List[DocumentReadMinifiedDTO]:
         """Возвращает все документы пользователя в сокращенном виде
         (без описания полей).
@@ -145,7 +155,7 @@ class DocumentService:
         """
         if not user:
             return []
-        obj_sequence = await DocumentDAO.get_all(owner_id=user.id)
+        obj_sequence = await DocumentDAO.get_all(owner_id=user.id, **filter_by)
         return [
             DocumentReadMinifiedDTO.model_validate(obj) for obj in obj_sequence
         ]

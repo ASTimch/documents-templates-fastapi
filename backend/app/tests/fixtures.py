@@ -359,9 +359,10 @@ documents_for_read = [
         "id": 1,
         "template_id": 1,
         "description": "Наименование документа 1",
-        # "created_at": "2023-12-20T11:37:24.683Z",
-        # "updated_at": "2023-12-20T11:37:24.683Z",
+        "created_at": "2023-12-20T11:37:24.683Z",
+        "updated_at": "2023-12-20T11:37:24.683Z",
         "owner_id": 1,
+        "completed": True,
         # "thumbnail": None,
         "grouped_fields": [
             {
@@ -450,9 +451,10 @@ documents_for_read = [
         "id": 2,
         "template_id": 1,
         "description": "Наименование документа 2",
-        # "created_at": "2023-12-20T11:37:24.683Z",
-        # "updated_at": "2023-12-20T11:37:24.683Z",
+        "created_at": "2023-12-20T11:37:24.683Z",
+        "updated_at": "2023-12-20T11:37:24.683Z",
         "owner_id": 1,
+        "completed": False,
         # "thumbnail": None,
         "grouped_fields": [
             {
@@ -533,7 +535,7 @@ documents_for_read = [
                 "length": 100,
                 "mask": template_field_type_mask_mapping.get("str"),
                 "default": None,
-                "value": "Значение поля 16",
+                "value": None,
             },
         ],
     },
@@ -574,7 +576,7 @@ documents_for_write = [
     },
     {
         "template_id": 1,
-        "description": "Наименование документа 1",
+        "description": "Наименование документа 2",
         "owner_id": 1,
         "completed": False,
         "fields": [
