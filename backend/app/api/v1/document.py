@@ -13,6 +13,7 @@ from app.schemas.document import (
     DocumentReadDTO,
     DocumentReadMinifiedDTO,
     DocumentWriteDTO,
+    document_id_type,
 )
 from app.services.document import DocumentService
 
@@ -36,7 +37,7 @@ async def get_all_documents(
     summary="Получить документ с заданным document_id",
 )
 async def get_document_by_id(
-    document_id: pk_type,
+    document_id: document_id_type,
     user: Optional[User] = Depends(current_active_user),
 ) -> Optional[DocumentReadDTO]:
     return await DocumentService.get(id=document_id, user=user)
@@ -53,3 +54,14 @@ async def add_document(
     document_id = await DocumentService.add(data, user)
     document_dao = await DocumentService.get(id=document_id, user=user)
     return document_dao
+
+
+@router.delete(
+    "/{document_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить документ",
+)
+async def delete_document(
+    document_id: document_id_type, user: User = Depends(current_active_user)
+):
+    await DocumentService.delete(document_id, user)

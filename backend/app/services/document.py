@@ -159,3 +159,22 @@ class DocumentService:
         return [
             DocumentReadMinifiedDTO.model_validate(obj) for obj in obj_sequence
         ]
+
+    @classmethod
+    async def delete(cls, id: pk_type, user: User) -> None:
+        """Удалить документ с заданным id.
+
+        Args:
+            id (pk_type): идентификатор документа.
+            user (User): пользователь.
+
+        Raises:
+            DocumentNotFoundException: документ с заданным id отсутствует.
+            DocumentAccessDeniedException: пользователь не является владельцем.
+        """
+        obj_db = await DocumentDAO.get_by_id(id)
+        if not obj_db:
+            raise DocumentNotFoundException()
+        if obj_db.owner_id != user.id:
+            raise DocumentAccessDeniedException()
+        await DocumentDAO.delete_(id)

@@ -173,31 +173,49 @@ class TestDocumentService:
         admin_docs = await DocumentService.get_all(admin_user)
         assert not admin_docs, "У администратора нет документов."
 
-        # delete user documents
+        # delete documents by not owner
+        for id in doc_ids:
+            with pytest.raises(DocumentAccessDeniedException):
+                await DocumentService.delete(id, admin_user)
 
-        # db_len = len(await TemplateService.get_all())
-        # new_obj_id = await TemplateService.add(write_dto)
-        # assert new_obj_id, "Функция не вернула id нового объекта"
-        # new_db_len = len(await TemplateService.get_all())
-        # assert db_len + 1 == new_db_len, "Объект не добавлен в базу"
+        # delete documents by owner
+        for id in doc_ids:
+            await DocumentService.delete(id, active_user)
+            with pytest.raises(DocumentNotFoundException):
+                await DocumentService.get(id=id, user=active_user)
 
-        # # Чтение записи по id из базы
-        # expected_dto = TemplateReadDTO(**read_data)
-        # await self._check_template_by_id(new_obj_id, expected_dto)
+    @pytest.mark.parametrize(
+        "documents_for_write, documents_for_read",
+        [(documents_for_write, documents_for_read)],
+    )
+    async def test_get_all_filter_by(
+        self,
+        documents_for_write: dict[str, Any],
+        documents_for_read: dict[str, Any],
+        active_user,
+        admin_user,
+    ):
+        # create documents for simple User
+        doc_ids = [
+            await DocumentService.add(DocumentWriteDTO(**doc), active_user)
+            for doc in documents_for_write
+        ]
 
-        # # удаление созданной записи
-        # await TemplateService.delete(new_obj_id)
-        # new_db_len = len(await TemplateService.get_all())
-        # assert new_db_len == db_len
-        # with pytest.raises(TemplateNotFoundException):
-        #     obj_db = await TemplateService.get(id=new_obj_id)
-        #     assert not obj_db, "Объект не удален из базы"
+        # get_all completed documents
+        user_docs = await DocumentService.get_all(active_user, completed=True)
+        assert user_docs, "Должны быть документы с completed=True"
+        for doc_dto in user_docs:
+            assert doc_dto.completed is True, "Ошибка выборки"
 
-        # with pytest.raises(TemplateAlreadyDeletedException):
-        #     await TemplateService.delete(id=new_obj_id)
-        #     assert (
-        #         False
-        #     ), "Удаление должно взводить TemplateAlreadyDeletedException"
+        # get_all not completed documents (drafts)
+        user_docs = await DocumentService.get_all(active_user, completed=False)
+        assert user_docs, "Должны быть документы с completed=False"
+        for doc_dto in user_docs:
+            assert doc_dto.completed is False, "Ошибка выборки"
+
+        # delete documents by owner
+        for id in doc_ids:
+            await DocumentService.delete(id, active_user)
 
     @pytest.mark.parametrize(
         "documents_for_write",
