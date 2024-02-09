@@ -53,3 +53,49 @@ Content-Type: application/json
         }
       ]
 }
+
+{
+  "id": 8,
+  "description": "Документ 4 updated",
+  "template_id": 11,
+  "owner_id": 1,
+  "completed": false,
+  "fields": [
+    {
+          "field_id": 19,
+          "value": "Работодатель+"
+        },
+        {
+          "field_id": 20,
+          "value": "ООО АйТиСолюшенс"
+        },
+        {
+          "field_id": 21,
+          "value": "Иванов Иван Иванович"
+        },
+        {
+          "field_id": 22,
+          "value": "инженер"
+        },
+        {
+          "field_id": 23,
+          "value": "Сидорова Анна Андреевна"
+        },
+        {
+          "field_id": 24,
+          "value": "14"
+        },
+        {
+          "field_id": 25,
+          "value": "10.02.2023"
+        },
+        {
+          "field_id": 26,
+          "value": "30000"
+        },
+        {
+          "field_id": 27,
+          "value": "01.02.2023"
+        }
+      ]
+    }

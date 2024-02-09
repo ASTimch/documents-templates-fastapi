@@ -60,3 +60,15 @@ async def delete_document(
     document_id: document_id_type, user: User = Depends(current_active_user)
 ):
     await DocumentService.delete(document_id, user)
+
+
+@router.put(
+    "/{document_id}",
+    summary="Обновить документ с заданным document_id",
+)
+async def update_document(
+    document_id: document_id_type,
+    data: DocumentWriteDTO,
+    user: Optional[User] = Depends(current_active_user),
+) -> Optional[DocumentReadDTO]:
+    return await DocumentService.update(id=document_id, dto=data, user=user)

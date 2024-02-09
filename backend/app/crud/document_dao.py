@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import Result, Sequence, select
+from sqlalchemy import Result, Sequence, delete, select
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.crud.base_dao import BaseDAO
@@ -81,6 +81,19 @@ class DocumentFieldDAO(BaseDAO):
             )
             result: Result = await session.execute(query)
             return result.scalars().all()
+
+    @classmethod
+    async def delete_all(cls, **filter_by) -> None:
+        """Удалить все объекты по заданному фильтру.
+
+        Args:
+            filter_by (dict): параметры для поиска объектов.
+
+        """
+        async with async_session_maker() as session:
+            query = delete(cls.model).filter_by(**filter_by)
+            await session.execute(query)
+            await session.commit()
 
 
 class DocumentDAO(BaseDAO):

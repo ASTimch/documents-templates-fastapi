@@ -92,8 +92,33 @@ class DocumentService:
         return updated_fields
 
     @classmethod
+    def _model_as_dto(cls, obj: Document) -> DocumentReadDTO:
+        """Преобразование модели документа в DTO для выдачи."""
+        groups_dicts = {
+            group.id: group.to_dict() for group in obj.template.groups
+        }
+        field_values = {
+            field.template_field_id: field.value for field in obj.fields
+        }
+        ungrouped_fields = []
+        for field in obj.template.fields:
+            field_dict = field.to_dict()
+            field_dict["type"] = field.type.type
+            field_dict["mask"] = field.type.mask
+            field_dict["value"] = field_values.get(field.id, None)
+            group_dict = groups_dicts.get(field.group_id)
+            if group_dict:
+                group_dict.setdefault("fields", []).append(field_dict)
+            else:
+                ungrouped_fields.append(field_dict)
+        obj_dict = obj.to_dict()
+        obj_dict["grouped_fields"] = groups_dicts.values()
+        obj_dict["ungrouped_fields"] = ungrouped_fields
+        return DocumentReadDTO.model_validate(obj_dict)
+
+    @classmethod
     async def add(
-        cls, obj: DocumentWriteDTO, owner: User
+        cls, dto: DocumentWriteDTO, owner: User
     ) -> Optional[pk_type]:
         """Сохранить новый документ.
 
@@ -108,9 +133,9 @@ class DocumentService:
         if not owner.is_active:
             raise DocumentAccessDeniedException()
         # проверка консистентности (template_id и field_id)
-        await cls._check_document_consistency(obj)
+        await cls._check_document_consistency(dto)
 
-        obj_dict = obj.model_dump()
+        obj_dict = dto.model_dump()
         obj_dict["owner_id"] = owner.id
         fields = obj_dict.pop("fields")
         # создание документа (без полей)
@@ -160,27 +185,7 @@ class DocumentService:
         # запрет доступа всем, кроме владельца документа
         if obj.owner_id != user.id:
             raise DocumentAccessDeniedException()
-        groups_dicts = {
-            group.id: group.to_dict() for group in obj.template.groups
-        }
-        field_values = {
-            field.template_field_id: field.value for field in obj.fields
-        }
-        ungrouped_fields = []
-        for field in obj.template.fields:
-            field_dict = field.to_dict()
-            field_dict["type"] = field.type.type
-            field_dict["mask"] = field.type.mask
-            field_dict["value"] = field_values.get(field.id, None)
-            group_dict = groups_dicts.get(field.group_id)
-            if group_dict:
-                group_dict.setdefault("fields", []).append(field_dict)
-            else:
-                ungrouped_fields.append(field_dict)
-        obj_dict = obj.to_dict()
-        obj_dict["grouped_fields"] = groups_dicts.values()
-        obj_dict["ungrouped_fields"] = ungrouped_fields
-        return DocumentReadDTO.model_validate(obj_dict)
+        return cls._model_as_dto(obj)
 
     @classmethod
     async def get_all(
@@ -220,3 +225,46 @@ class DocumentService:
         if obj_db.owner_id != user.id:
             raise DocumentAccessDeniedException()
         await DocumentDAO.delete_(id)
+
+    @classmethod
+    async def update(
+        cls, id: pk_type, dto: DocumentWriteDTO, user: User
+    ) -> DocumentReadDTO:
+        """Изменить/обновить документ.
+
+        Args:
+            id (pk_type): Идентификатор документа.
+            dto (DocumentWriteDTO): Поля документа.
+            user (User): Пользователь.
+
+        Returns:
+            DocumentReadDTO: Документ со всеми полями и их описанием.
+
+        Raises:
+            DocumentAccessDeniedException: Если пользователь деактивирован
+            или не является владельцем документа.
+            DocumentNotFoundException: Документ не найден.
+            DocumentConflictException: Поля документа не согласованны.
+        """
+        # запрет модификации документа для неактивных пользователей
+        if not user.is_active:
+            raise DocumentAccessDeniedException()
+        obj_db = await DocumentDAO.get_by_id(id)
+        if not obj_db:
+            raise DocumentNotFoundException()
+        if obj_db.owner_id != user.id:
+            raise DocumentAccessDeniedException()
+        # проверка консистентности (template_id и field_id)
+        await cls._check_document_consistency(dto)
+        obj_dict = dto.model_dump()
+        obj_dict["owner_id"] = user.id
+        fields = obj_dict.pop("fields")
+        # обновление свойств документа
+        await DocumentDAO.update_(id, **obj_dict)
+        # удаление старых полей
+        await DocumentFieldDAO.delete_all(document_id=id)
+        # создание новых полей
+        fields = cls._update_fields_document_id(fields, id)
+        await DocumentFieldDAO.create_list(fields)
+        document = await DocumentDAO.get_by_id(id)
+        return cls._model_as_dto(document)
