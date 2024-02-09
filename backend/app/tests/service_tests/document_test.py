@@ -25,15 +25,27 @@ from app.services.document import DocumentService
 from app.services.template import TemplateService
 from app.tests.fixtures import (
     documents_for_read,
+    documents_for_update,
     documents_for_write,
     inconsistent_documents,
     templates_for_read,
+    updated_documents_for_read,
 )
 
 # users_ids
 active_user_id = 1
 admin_user_id = 2
 inactive_user_id = 3
+
+dto_write = [DocumentWriteDTO(**doc) for doc in documents_for_write]
+dto_read = [DocumentReadDTO(**doc) for doc in documents_for_read]
+dto_read_minified = [
+    DocumentReadMinifiedDTO(**doc) for doc in documents_for_read
+]
+dto_update = [DocumentWriteDTO(**doc) for doc in documents_for_update]
+expected_dto_update = [
+    DocumentReadDTO(**doc) for doc in updated_documents_for_read
+]
 
 
 @pytest.fixture(autouse=True, scope="class")
@@ -138,25 +150,23 @@ class TestDocumentService:
             await DocumentService.delete(id=100, user=active_user)
 
     @pytest.mark.parametrize(
-        "documents_for_write, documents_for_read",
-        [(documents_for_write, documents_for_read)],
+        "dto_write, dto_read",
+        [(dto_write, dto_read)],
     )
     async def test_add_get_delete(
         self,
-        documents_for_write: dict[str, Any],
-        documents_for_read: dict[str, Any],
+        dto_write: list[DocumentWriteDTO],
+        dto_read: list[DocumentReadDTO],
         active_user,
         admin_user,
         inactive_user,
     ):
         # create documents for simple User
         doc_ids = [
-            await DocumentService.add(DocumentWriteDTO(**doc), active_user)
-            for doc in documents_for_write
+            await DocumentService.add(dto, active_user) for dto in dto_write
         ]
 
-        for id, doc_read in zip(doc_ids, documents_for_read):
-            expected_dto = DocumentReadDTO(**doc_read)
+        for id, expected_dto in zip(doc_ids, dto_read):
             await self._check_document_by_id(id, expected_dto, active_user)
 
         # check no access for no author
@@ -166,8 +176,7 @@ class TestDocumentService:
 
         # get_all for active_user
         user_docs = await DocumentService.get_all(active_user)
-        for doc_dto, expected_doc in zip(user_docs, documents_for_read):
-            expected_dto = DocumentReadMinifiedDTO(**expected_doc)
+        for doc_dto, expected_dto in zip(user_docs, dto_read):
             self._compare_minified(doc_dto, expected_dto)
 
         # get_all for admin_user
@@ -188,7 +197,7 @@ class TestDocumentService:
     @pytest.mark.parametrize("documents", (inconsistent_documents,))
     async def test_add_raises_exception_for_inconsistent_request(
         self,
-        documents: dict[str, Any],
+        documents: list[dict[str, Any]],
         active_user,
     ):
         # create documents for simple User
@@ -197,19 +206,18 @@ class TestDocumentService:
                 await DocumentService.add(DocumentWriteDTO(**doc), active_user)
 
     @pytest.mark.parametrize(
-        "documents_for_write, documents_for_read",
-        [(documents_for_write, documents_for_read)],
+        "dto_write, dto_read",
+        [(dto_write, dto_read)],
     )
     async def test_get_all_filter_by(
         self,
-        documents_for_write: dict[str, Any],
-        documents_for_read: dict[str, Any],
+        dto_write: list[DocumentWriteDTO],
+        dto_read: list[DocumentReadMinifiedDTO],
         active_user,
     ):
         # create documents for simple User
         doc_ids = [
-            await DocumentService.add(DocumentWriteDTO(**doc), active_user)
-            for doc in documents_for_write
+            await DocumentService.add(dto, active_user) for dto in dto_write
         ]
 
         # get_all completed documents
@@ -228,15 +236,88 @@ class TestDocumentService:
         for id in doc_ids:
             await DocumentService.delete(id, active_user)
 
-    @pytest.mark.parametrize("documents_for_write", (documents_for_write,))
+    @pytest.mark.parametrize("dto_write", (dto_write,))
     async def test_add_for_inactive_user(
         self,
-        documents_for_write: dict[str, Any],
+        dto_write: list[DocumentWriteDTO],
         inactive_user,
     ):
         # create documents for inactive_user should raise AccessDenied
-        for doc in documents_for_write:
+        for dto in dto_write:
             with pytest.raises(DocumentAccessDeniedException):
-                await DocumentService.add(
-                    DocumentWriteDTO(**doc), inactive_user
-                )
+                await DocumentService.add(dto, inactive_user)
+
+    @pytest.mark.parametrize("dto_update", (dto_update,))
+    async def test_update_for_inactive_user(
+        self,
+        dto_update: list[DocumentWriteDTO],
+        inactive_user,
+    ):
+        # update documents for inactive_user should raise AccessDenied
+        for dto in dto_update:
+            with pytest.raises(DocumentAccessDeniedException):
+                await DocumentService.update(1, dto, inactive_user)
+
+    @pytest.mark.parametrize("dto_update", (dto_update,))
+    async def test_update_invalid_id_raises_exception(
+        self, dto_update: dict[str, Any], active_user
+    ):
+        for dto in dto_update:
+            with pytest.raises(DocumentNotFoundException):
+                await DocumentService.update(id=100, dto=dto, user=active_user)
+
+    @pytest.mark.parametrize(
+        "dto_write, dto_update",
+        [(dto_write, dto_update)],
+    )
+    async def test_update_for_not_owner_raises_exception(
+        self,
+        dto_write: list[DocumentWriteDTO],
+        dto_update: list[DocumentWriteDTO],
+        active_user,
+        admin_user,
+    ):
+        # create documents for simple User
+        doc_ids = [
+            await DocumentService.add(dto, active_user) for dto in dto_write
+        ]
+
+        for id, dto in zip(doc_ids, dto_update):
+            with pytest.raises(DocumentAccessDeniedException):
+                await DocumentService.update(id=id, dto=dto, user=admin_user)
+
+        # delete documents by owner
+        for id in doc_ids:
+            await DocumentService.delete(id, active_user)
+
+    @pytest.mark.parametrize(
+        "dto_write, dto_update, expected_dto_update",
+        [
+            (
+                dto_write,
+                dto_update,
+                expected_dto_update,
+            )
+        ],
+    )
+    async def test_update_documents(
+        self,
+        dto_write: list[DocumentWriteDTO],
+        dto_update: list[DocumentWriteDTO],
+        expected_dto_update: list[DocumentReadDTO],
+        active_user,
+    ):
+        # create documents for simple User
+        doc_ids = [
+            await DocumentService.add(dto, active_user) for dto in dto_write
+        ]
+
+        for id, dto, expected_dto in zip(
+            doc_ids, dto_update, expected_dto_update
+        ):
+            new_dto = await DocumentService.update(id, dto, active_user)
+            self._compare_documents(new_dto, expected_dto)
+
+        # delete documents by owner
+        for id in doc_ids:
+            await DocumentService.delete(id, active_user)

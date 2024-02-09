@@ -645,3 +645,295 @@ inconsistent_documents = [
         ],
     },
 ]
+
+documents_for_update = [
+    {
+        "template_id": 1,
+        "description": "Наименование документа 1 last",
+        "owner_id": 1,
+        "completed": False,
+        "fields": [
+            {
+                "field_id": 1,
+                "value": "Значение поля 100",
+            },
+            {
+                "field_id": 2,
+                "value": "Значение поля 200",
+            },
+            {
+                "field_id": 3,
+                "value": "Значение поля 300",
+            },
+            {
+                "field_id": 4,
+                "value": "Значение поля 400",
+            },
+            {
+                "field_id": 5,
+                "value": "Значение поля 500",
+            },
+            {
+                "field_id": 6,
+                "value": "Значение поля 600",
+            },
+        ],
+    },
+    {
+        "template_id": 1,
+        "description": "Наименование документа 2 new",
+        "owner_id": 1,
+        "completed": True,
+        "fields": [
+            {
+                "field_id": 1,
+                "value": "Значение поля 110",
+            },
+            {
+                "field_id": 2,
+                "value": "Значение поля 120",
+            },
+            {
+                "field_id": 3,
+                "value": "Значение поля 130",
+            },
+            {
+                "field_id": 4,
+                "value": "Значение поля 140",
+            },
+            {
+                "field_id": 5,
+                "value": "Значение поля 150",
+            },
+            {
+                "field_id": 6,
+                "value": "Значение поля 160",
+            },
+        ],
+    },
+]
+
+updated_documents_for_read = [
+    {
+        "id": 1,
+        "template_id": 1,
+        "description": "Наименование документа 1 last",
+        "created_at": "2023-12-20T11:37:24.683Z",
+        "updated_at": "2023-12-20T11:37:24.683Z",
+        "owner_id": 1,
+        "completed": False,
+        # "thumbnail": None,
+        "grouped_fields": [
+            {
+                "id": 1,
+                "name": "Группа 1",
+                "fields": [
+                    {
+                        "id": 1,
+                        "tag": "Тэг1",
+                        "name": "Наименование 1",
+                        "hint": "Описание 1",
+                        "type": "str",
+                        "length": 100,
+                        "mask": template_field_type_mask_mapping.get("str"),
+                        "default": None,
+                        "value": "Значение поля 100",
+                    },
+                    {
+                        "id": 2,
+                        "tag": "Тэг2",
+                        "name": "Наименование 2",
+                        "hint": "Описание 2",
+                        "type": "int",
+                        "length": 20,
+                        "mask": template_field_type_mask_mapping.get("int"),
+                        "default": None,
+                        "value": "Значение поля 200",
+                    },
+                ],
+            },
+            {
+                "id": 2,
+                "name": "Группа 2",
+                "fields": [
+                    {
+                        "id": 3,
+                        "tag": "Тэг3",
+                        "name": "Наименование 3",
+                        "hint": "Описание 3",
+                        "type": "str",
+                        "length": 40,
+                        "mask": template_field_type_mask_mapping.get("str"),
+                        "default": None,
+                        "value": "Значение поля 300",
+                    },
+                    {
+                        "id": 4,
+                        "tag": "Тэг4",
+                        "name": "Наименование 4",
+                        "hint": "Описание 4",
+                        "type": "float",
+                        "length": 40,
+                        "mask": template_field_type_mask_mapping.get("float"),
+                        "default": "0.0",
+                        "value": "Значение поля 400",
+                    },
+                ],
+            },
+        ],
+        "ungrouped_fields": [
+            {
+                "id": 5,
+                "tag": "Тэг5",
+                "name": "Наименование 5",
+                "hint": "Описание 5",
+                "type": "str",
+                "length": 100,
+                "mask": template_field_type_mask_mapping.get("str"),
+                "default": None,
+                "value": "Значение поля 500",
+            },
+            {
+                "id": 6,
+                "tag": "Тэг6",
+                "name": "Наименование 6",
+                "hint": "Описание 6",
+                "type": "str",
+                "length": 100,
+                "mask": template_field_type_mask_mapping.get("str"),
+                "default": None,
+                "value": "Значение поля 600",
+            },
+        ],
+    },
+    {
+        "id": 2,
+        "template_id": 1,
+        "description": "Наименование документа 2 new",
+        "created_at": "2023-12-20T11:37:24.683Z",
+        "updated_at": "2023-12-20T11:37:24.683Z",
+        "owner_id": 1,
+        "completed": True,
+        # "thumbnail": None,
+        "grouped_fields": [
+            {
+                "id": 1,
+                "name": "Группа 1",
+                "fields": [
+                    {
+                        "id": 1,
+                        "tag": "Тэг1",
+                        "name": "Наименование 1",
+                        "hint": "Описание 1",
+                        "type": "str",
+                        "length": 100,
+                        "mask": template_field_type_mask_mapping.get("str"),
+                        "default": None,
+                        "value": "Значение поля 110",
+                    },
+                    {
+                        "id": 2,
+                        "tag": "Тэг2",
+                        "name": "Наименование 2",
+                        "hint": "Описание 2",
+                        "type": "int",
+                        "length": 20,
+                        "mask": template_field_type_mask_mapping.get("int"),
+                        "default": None,
+                        "value": "Значение поля 120",
+                    },
+                ],
+            },
+            {
+                "id": 2,
+                "name": "Группа 2",
+                "fields": [
+                    {
+                        "id": 3,
+                        "tag": "Тэг3",
+                        "name": "Наименование 3",
+                        "hint": "Описание 3",
+                        "type": "str",
+                        "length": 40,
+                        "mask": template_field_type_mask_mapping.get("str"),
+                        "default": None,
+                        "value": "Значение поля 130",
+                    },
+                    {
+                        "id": 4,
+                        "tag": "Тэг4",
+                        "name": "Наименование 4",
+                        "hint": "Описание 4",
+                        "type": "float",
+                        "length": 40,
+                        "mask": template_field_type_mask_mapping.get("float"),
+                        "default": "0.0",
+                        "value": "Значение поля 140",
+                    },
+                ],
+            },
+        ],
+        "ungrouped_fields": [
+            {
+                "id": 5,
+                "tag": "Тэг5",
+                "name": "Наименование 5",
+                "hint": "Описание 5",
+                "type": "str",
+                "length": 100,
+                "mask": template_field_type_mask_mapping.get("str"),
+                "default": None,
+                "value": "Значение поля 150",
+            },
+            {
+                "id": 6,
+                "tag": "Тэг6",
+                "name": "Наименование 6",
+                "hint": "Описание 6",
+                "type": "str",
+                "length": 100,
+                "mask": template_field_type_mask_mapping.get("str"),
+                "default": None,
+                "value": "Значение поля 160",
+            },
+        ],
+    },
+]
+
+inconsistent_documents = [
+    {
+        "template_id": 100,
+        "description": "Шаблон не существует",
+        "owner_id": 1,
+        "completed": False,
+        "fields": [],
+    },
+    {
+        "template_id": 1,
+        "description": "Шаблон существует",
+        "owner_id": 1,
+        "completed": False,
+        "fields": [
+            {
+                "field_id": 1,
+                "value": "Значение поля 1",
+            },
+            {
+                "field_id": 12,
+                "value": "Поле чужого шаблона",
+            },
+            {
+                "field_id": 13,
+                "value": "Поле чужого шаблона",
+            },
+            {
+                "field_id": 4,
+                "value": "Значение поля 4",
+            },
+            {
+                "field_id": 5,
+                "value": "Значение поля 5",
+            },
+        ],
+    },
+]
