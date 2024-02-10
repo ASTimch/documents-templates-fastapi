@@ -1,0 +1,149 @@
+{% extends "base.jinja" %}
+{% block title %}
+    {{ data.description[0:30] }}
+{% endblock title %}
+{% block content %}
+    <div>
+        <form>
+            <div class="m-3 p-3">
+                <div class="form-group">
+                    <label for="description">
+                        <h3>Наименование документа</h3>
+                    </label>
+                    <input type="text"
+                           class="form-control"
+                           id="description-input"
+                           aria-describedby="descriptionHelp"
+                           placeholder="{{ data.template_title }}"
+                           value="{{ data.description }}">
+                    <small id="descriptionHelp" class="form-text text-muted">Имя для идентификации в вашей папке документов.</small>
+                </div>
+                <div>
+                    Шаблон: <a href="{{ url_for('view_template_by_id', template_id= data.template_id) }}">{{ data.template_title }}</a>
+                </div>
+                <div>Создан: {{ data.created_at.strftime("%d %b %Y") }}</div>
+                <div>Изменен: {{ data.updated_at.strftime("%d %b %Y") }}</div>
+            </div>
+            {% for group in data.grouped_fields %}
+                <div class="border border-primary m-3 p-3">
+                    <h4>{{ group.name }}</h4>
+                    {% for field in group.fields %}
+                        <div class="form-group">
+                            <label for="field-{{ field.id }}">{{ field.name }}</label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="field-{{ field.id }}"
+                                   aria-describedby="fieldHelp-{{ field.id }}"
+                                   placeholder="{{ field.default }}"
+                                   field_id="{{ field.id }}"
+                                   value="{{ field.value }}">
+                            <small id="fieldHelp-{{ field.id }}" class="form-text text-muted">{{ field.hint }}</small>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <div class="border border-primary m-3 p-3">
+                {% for field in data.ungrouped_fields %}
+                    <div class="form-group">
+                        <label for="field-{{ field.id }}">{{ field.name }}</label>
+                        <input type="text"
+                               class="form-control"
+                               id="field-{{ field.id }}"
+                               aria-describedby="fieldHelp-{{ field.id }}"
+                               placeholder="{{ field.default }}"
+                               field_id="{{ field.id }}"
+                               value="{{ field.value }}">
+                        <small id="fieldHelp-{{ field.id }}" class="form-text text-muted">{{ field.hint }}</small>
+                    </div>
+                {% endfor %}
+            </div>
+        </form>
+        <button class="btn btn-primary" id="save-button">Сохранить</button>
+        <button class="btn btn-primary" id="download-pdf">Скачать PDF</button>
+        <button class="btn btn-primary" id="download-docx">Скачать DOCX</button>
+    </div>
+{% endblock content %}
+{% block scripts %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var downloadPdfButton = document.getElementById("download-pdf");
+            if (downloadPdfButton) {
+                downloadPdfButton.addEventListener("click", function() {
+                    fetch("{{ url_for('download_file', document_id= data.id).include_query_params(pdf=true) }}")
+                        .then(response => response.blob())
+                        .then(blob => {
+                            var a = document.createElement('a');
+                            a.href = URL.createObjectURL(blob);
+                            a.download = '{{ data.description }}.pdf';  // Set the filename for the downloaded file
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                        });
+                });
+            }
+            
+            var downloadDocxButton = document.getElementById("download-docx");
+            if (downloadDocxButton) {
+                downloadDocxButton.addEventListener("click", function() {
+                    fetch("{{ url_for('download_file', document_id= data.id) }}")
+                        .then(response => response.blob())
+                        .then(blob => {
+                            var a = document.createElement('a');
+                            a.href = URL.createObjectURL(blob);
+                            a.download = '{{ data.description }}.docx';  // Set the filename for the downloaded file
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                        });
+                });
+            }
+
+            
+            var saveButton = document.getElementById("save-button");
+            if (saveButton) {
+                saveButton.addEventListener("click", function() {
+                    description = document.getElementById("description-input").value;
+                    var inputFields = document.querySelectorAll("input[id^='field-']");
+                    var fields = [];
+                    var completed = true
+                    
+                    inputFields.forEach(function(input) {
+                        var fieldId = input.getAttribute("field_id");
+                        var fieldValue = input.value;
+                        var field = {
+                            "field_id": fieldId,
+                            "value": fieldValue
+                        };
+                        if (fieldValue === "") {
+                            completed = false;
+                            return;
+                        }
+                        fields.push(field);
+                    });
+                    
+                    var jsonContent = {
+                        "description": description,
+                        "template_id": {{ data.template_id }},
+                        "completed": completed,
+                        "fields": fields
+                    };
+
+                    fetch("{{ url_for('update_document', document_id= data.id) }}", {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(jsonContent)
+                    })
+                    .then(response => {
+                        console.log(response);
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+                });
+            }
+            
+        });
+    </script>
+{% endblock scripts %}

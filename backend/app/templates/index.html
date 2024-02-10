@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}
+  {{ title }}
+{% endblock title %}
+{% block content %}
+  <h1>{{ title }}</h1>
+  {% include 'posts/includes/switcher.html' with index=True %}
+  {% load cache %}
+  {# {% cache 20 index_page with page_obj %} #}
+    {% for post in page_obj %}
+      {% include "posts/includes/post_card.html" %}
+      {% if not forloop.last %}<hr>{% endif %}
+    {% endfor %}
+    {% include "posts/includes/paginator.html" %}
+    {# {% endcache %} #}
+{% endblock content %}

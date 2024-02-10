@@ -28,8 +28,20 @@ async def view_document_by_id(
     user: Optional[User] = Depends(current_active_user),
 ):
     dto = await DocumentService.get(id=document_id, user=user)
-    print(dto)
-    print(dto.model_dump())
     return templates.TemplateResponse(
-        "document.html", {"request": request, "data": dto.model_dump()}
+        "document.jinja", {"request": request, "data": dto.model_dump()}
+    )
+
+
+@view_router.get("/", summary="Получить все документы пользователя")
+async def view_get_all_documents(
+    request: Request,
+    user: User = Depends(current_active_user),
+) -> Optional[list[DocumentReadMinifiedDTO]]:
+    dto_list = await DocumentService.get_all(user=user) if user else []
+    docs_list = [dto.model_dump() for dto in dto_list]
+    print(dto_list)
+    print(docs_list)
+    return templates.TemplateResponse(
+        "document_list.jinja", {"request": request, "data": docs_list}
     )

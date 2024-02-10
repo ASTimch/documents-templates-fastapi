@@ -101,9 +101,9 @@ async def check_consistency(
     summary="Получить файл черновика в формате docx или pdf",
     status_code=status.HTTP_200_OK,
 )
-async def get_draft(template_id: int, pdf: bool = False) -> FileResponse:
+async def download_draft(template_id: int, pdf: bool = False) -> FileResponse:
     file, filename = await TemplateService.get_draft(template_id, pdf)
-    response = await TemplateService.get_file_response(file, filename, pdf)
+    response = await get_file_response(file, filename, pdf)
     return response
 
 
@@ -138,7 +138,7 @@ async def generate_thumbnail(template_id: int):
     summary="Получить превью документа в формате docx или pdf",
     status_code=status.HTTP_200_OK,
 )
-async def get_preview(
+async def download_preview(
     template_id: int,
     field_values: TemplateFieldWriteValueListDTO,
     pdf: bool = False,
