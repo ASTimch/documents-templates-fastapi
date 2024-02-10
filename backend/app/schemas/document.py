@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 from app.schemas.template import id_type, template_id_type
 
@@ -53,6 +53,7 @@ class DocumentReadMinifiedDTO(BaseModel):
     id: document_id_type
     description: Annotated[str, Field(description="Наименование документа")]
     template_id: template_id_type
+    template_title: Annotated[str, Field(description="Наименование шаблона")]
     created_at: Annotated[datetime, Field(description="Дата создания")]
     updated_at: Annotated[datetime, Field(description="Дата модификации")]
     owner_id: Annotated[Optional[id_type], Field(description="Владелец")]

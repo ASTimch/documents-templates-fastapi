@@ -101,7 +101,7 @@ class TestDocumentService:
         assert field1.type == field2.type, "type полей не совпадают"
         assert field1.length == field2.length, "length полей не совпадают"
         assert field1.mask == field2.mask, "mask полей не совпадают"
-        assert field1.value == field2.value, "tag полей не совпадают"
+        assert field1.value == field2.value, "value полей не совпадают"
 
     def _compare_groups(self, group1, group2):
         assert group1.name == group2.name, "Имена групп не совпадают"

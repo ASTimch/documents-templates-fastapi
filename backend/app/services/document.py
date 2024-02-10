@@ -122,6 +122,7 @@ class DocumentService:
             else:
                 ungrouped_fields.append(field_dict)
         obj_dict = obj.to_dict()
+        obj_dict["template_title"] = obj.template.title
         obj_dict["grouped_fields"] = groups_dicts.values()
         obj_dict["ungrouped_fields"] = ungrouped_fields
         return DocumentReadDTO.model_validate(obj_dict)
@@ -214,7 +215,10 @@ class DocumentService:
             return []
         obj_sequence = await DocumentDAO.get_all(owner_id=user.id, **filter_by)
         return [
-            DocumentReadMinifiedDTO.model_validate(obj) for obj in obj_sequence
+            DocumentReadMinifiedDTO.model_validate(
+                obj.to_dict() | {"template_title": obj.template.title}
+            )
+            for obj in obj_sequence
         ]
 
     @classmethod

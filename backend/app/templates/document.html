@@ -31,6 +31,9 @@
                 <strong>Наименование документа</strong>
             </p>
             <input type="text" id="description-input" value="{{ data.description }}">
+            <p>
+                <strong>Шаблон</strong>
+            </p>
             {% for group in data.grouped_fields %}
                 <h2>{{ group.name }}</h2>
                 <table class="table">

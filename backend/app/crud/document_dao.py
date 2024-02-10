@@ -130,3 +130,22 @@ class DocumentDAO(BaseDAO):
             )
             result: Result = await session.execute(query)
             return result.unique().scalar_one_or_none()
+
+    @classmethod
+    async def get_all(cls, **filter_by) -> Sequence[Document]:
+        """Получить все объекты по заданному фильтру.
+
+        Args:
+            filter_by (dict): параметры для поиска объектов.
+
+        Returns:
+            list(Document): список объектов, удовлетворяющих фильтру поиска.
+        """
+        async with async_session_maker() as session:
+            query = (
+                select(cls.model)
+                .filter_by(**filter_by)
+                .options(joinedload(Document.template))
+            )
+            result: Result = await session.execute(query)
+            return result.scalars().all()
