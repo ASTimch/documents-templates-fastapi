@@ -8,6 +8,8 @@ from app.auth import (
     current_superuser,
     current_user_or_none,
 )
+from app.common.utils import get_file_response
+from app.config import settings
 from app.models.user import User
 from app.schemas.template import (
     TemplateFieldWriteValueListDTO,
@@ -31,7 +33,7 @@ async def get_all_templates(
     return templates
 
 
-@router.get("/{template_id}", summary="Шаблон с заданным template_id")
+@router.get("/{template_id}", summary="Получить шаблон с заданным template_id")
 async def get_template_by_id(
     template_id: int,
     user: Optional[User] = Depends(current_user_or_none),
@@ -40,11 +42,11 @@ async def get_template_by_id(
     return template
 
 
-@router.put("/{template_id}", summary="Обновить шаблон")
-async def update_template(
-    template_id: int, user: User = Depends(current_superuser)
-):
-    raise NotImplementedError
+# @router.put("/{template_id}", summary="Обновить шаблон")
+# async def update_template(
+#     template_id: int, user: User = Depends(current_superuser)
+# ):
+#     raise NotImplementedError
 
 
 @router.patch(
@@ -107,19 +109,24 @@ async def get_draft(template_id: int, pdf: bool = False) -> FileResponse:
 
 @router.get(
     "/{template_id}/get_thumbnail",
-    summary="Получить/сгенерировать картинку",
+    summary="Сгенерировать и скачать миниатюру.",
     status_code=status.HTTP_200_OK,
 )
 async def get_thumbnail(template_id: int) -> FileResponse:
     pdf_buffer, _ = await TemplateService.get_draft(template_id, pdf=True)
-    png_buffer = PdfConverter.pdf_to_thumbnail(pdf_buffer, 250, 250, "png")
+    png_buffer = PdfConverter.pdf_to_thumbnail(
+        pdf_buffer,
+        settings.THUMBNAIL_WIDTH,
+        settings.THUMBNAIL_HEIGHT,
+        settings.THUMBNAIL_FORMAT,
+    )
     response = Response(content=png_buffer.getvalue(), media_type="image/png")
     return response
 
 
 @router.get(
     "/{template_id}/generate_thumbnail",
-    summary="Сгенерировать картинку thumbnail",
+    summary="Сгенерировать миниатюру.",
     status_code=status.HTTP_200_OK,
 )
 async def generate_thumbnail(template_id: int):
@@ -141,7 +148,7 @@ async def get_preview(
         field_values.model_dump()["fields"],
         pdf,
     )
-    response = await TemplateService.get_file_response(file, filename, pdf)
+    response = await get_file_response(file, filename, pdf)
     return response
 
 

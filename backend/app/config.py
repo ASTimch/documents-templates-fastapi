@@ -56,6 +56,7 @@ class Settings(BaseSettings):
 
     # Настройки приложения
     API_V1_PREFIX: str = "/api/v1"
+    API_V2_PREFIX: str = "/view"
     TITLE: str = "Шаблонизатор документов"
     VERSION: str = "0.0.1"
     DESCRIPTION: str = "Шаблонизатор документов"
@@ -68,6 +69,7 @@ class Settings(BaseSettings):
 
     THUMBNAIL_HEIGHT: int = 300
     THUMBNAIL_WIDTH: int = 300
+    THUMBNAIL_FORMAT: str = "png"
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8"

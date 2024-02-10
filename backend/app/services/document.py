@@ -1,4 +1,8 @@
-from typing import Any, List, Optional
+import logging
+from io import BytesIO
+from typing import Any, List, Optional, Tuple
+
+from icecream import ic
 
 from app.common.constants import Messages
 from app.common.exceptions import (
@@ -6,6 +10,8 @@ from app.common.exceptions import (
     DocumentConflictException,
     DocumentNotFoundException,
     TemplateNotFoundException,
+    TemplatePdfConvertErrorException,
+    TemplateRenderErrorException,
 )
 from app.config import settings
 from app.crud.document_dao import DocumentDAO, DocumentFieldDAO
@@ -17,7 +23,11 @@ from app.schemas.document import (
     DocumentReadMinifiedDTO,
     DocumentWriteDTO,
 )
+from app.services.docx_render import DocxRender
+from app.services.pdf_converter import PdfConverter
 from app.services.template import TemplateService
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentService:
@@ -105,7 +115,7 @@ class DocumentService:
             field_dict = field.to_dict()
             field_dict["type"] = field.type.type
             field_dict["mask"] = field.type.mask
-            field_dict["value"] = field_values.get(field.id, None)
+            field_dict["value"] = field_values.get(field.id, "")
             group_dict = groups_dicts.get(field.group_id)
             if group_dict:
                 group_dict.setdefault("fields", []).append(field_dict)
@@ -268,3 +278,66 @@ class DocumentService:
         await DocumentFieldDAO.create_list(fields)
         document = await DocumentDAO.get_by_id(id)
         return cls._model_as_dto(document)
+
+    @classmethod
+    async def get_file(
+        cls, id: pk_type, user: User, pdf=False
+    ) -> Tuple[BytesIO, str]:
+        """Возвращает документ с заполненными полями в формате docx или pdf.
+
+        Args:
+            id (pk_type): идентификатор документа.
+            pdf (bool): True для формата pdf, False для формата docx.
+
+        Returns:
+            (file (BytesIO), filename (str)): сгенерированный файл и имя.
+
+        Raises:
+            DocumentNotFoundException: если документ с заданным id отсутствует.
+            TemplateFieldNotFoundException: если field_values содержит
+            ошибочные 'field_id', отсутствующие в полях шаблона.
+            TemplateRenderErrorException: при ошибках генерации docx.
+            TemplatePdfConvertErrorException: при ошибках генерации pdf.
+
+        """
+        if not user.is_active:
+            raise DocumentAccessDeniedException()
+        doc = await cls.get_or_raise_not_found(id)
+        if not doc:
+            raise DocumentNotFoundException()
+        if doc.owner_id != user.id:
+            raise DocumentAccessDeniedException()
+        field_values = {
+            field.template_field_id: field.value
+            for field in doc.fields
+            if field.value is not None
+        }
+        context = {
+            field.tag: value
+            for field in doc.template.fields
+            if (value := field_values.get(field.id))
+        }
+        context_default = {
+            field.tag: field.default or field.name
+            for field in doc.template.fields
+        }
+        docx_path = doc.template.filename
+        try:
+            docx = DocxRender(docx_path)
+            buffer = docx.get_partial(context, context_default)
+        except Exception as e:
+            logger.exception(e)
+            raise TemplateRenderErrorException()
+        filename = cls.PREVIEW_FILENAME_FORMAT.format(
+            name=doc.description, ext="docx"
+        )
+        if pdf:
+            try:
+                buffer = PdfConverter.docx_to_pdf(buffer)
+                filename = cls.PREVIEW_FILENAME_FORMAT.format(
+                    name=doc.description, ext="pdf"
+                )
+            except Exception as e:
+                logging.exception(e)
+                raise TemplatePdfConvertErrorException()
+        return buffer, filename

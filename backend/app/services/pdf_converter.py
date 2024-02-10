@@ -3,13 +3,15 @@ import subprocess
 import sys
 import tempfile
 from io import BytesIO
-from typing import Optional
+from typing import Literal, Optional, TypeAlias
 
 from fastapi import logger
 from pdf2image import convert_from_bytes
 from PIL.Image import Image
 
 from app.common.exceptions import TemplatePdfConvertErrorException
+
+img_format: TypeAlias = Literal["png", "jpeg", "tiff", "ppm"]
 
 
 class PdfConverter:
@@ -138,7 +140,7 @@ class PdfConverter:
 
     @classmethod
     def pdf_to_thumbnail(
-        cls, pdf_file: BytesIO, width: int, height: int, format: str
+        cls, pdf_file: BytesIO, width: int, height: int, format: img_format
     ) -> BytesIO:
         """Генерирует превью для заданного pdf файла в заданном формате.
 

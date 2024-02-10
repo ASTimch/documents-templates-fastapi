@@ -1,8 +1,10 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, status
+from fastapi.responses import FileResponse
 
 from app.auth import current_active_user
+from app.common.utils import get_file_response
 from app.models.user import User
 from app.schemas.document import (
     DocumentReadDTO,
@@ -11,9 +13,6 @@ from app.schemas.document import (
     document_id_type,
 )
 from app.services.document import DocumentService
-
-# from fastapi.responses import FileResponse, JSONResponse
-
 
 router = APIRouter()
 
@@ -72,3 +71,21 @@ async def update_document(
     user: Optional[User] = Depends(current_active_user),
 ) -> Optional[DocumentReadDTO]:
     return await DocumentService.update(id=document_id, dto=data, user=user)
+
+
+@router.get(
+    "/{document_id}/download",
+    summary="Получить файл документа в формате docx или pdf.",
+    status_code=status.HTTP_200_OK,
+)
+async def download_file(
+    document_id: document_id_type,
+    pdf: bool = False,
+    user: Optional[User] = Depends(current_active_user),
+) -> FileResponse:
+    file, filename = await DocumentService.get_file(
+        document_id,
+        user,
+        pdf,
+    )
+    return await get_file_response(file, filename, pdf)

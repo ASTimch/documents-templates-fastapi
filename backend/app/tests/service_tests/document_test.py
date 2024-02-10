@@ -311,12 +311,41 @@ class TestDocumentService:
         doc_ids = [
             await DocumentService.add(dto, active_user) for dto in dto_write
         ]
-
         for id, dto, expected_dto in zip(
             doc_ids, dto_update, expected_dto_update
         ):
             new_dto = await DocumentService.update(id, dto, active_user)
             self._compare_documents(new_dto, expected_dto)
+        # delete documents by owner
+        for id in doc_ids:
+            await DocumentService.delete(id, active_user)
+
+    @pytest.mark.parametrize("dto_write", (dto_write,))
+    async def test_get_file_raises_exceptions(
+        self,
+        dto_write: list[DocumentWriteDTO],
+        active_user,
+        admin_user,
+        inactive_user,
+    ):
+        doc_ids = [
+            await DocumentService.add(dto, active_user) for dto in dto_write
+        ]
+        # get_file documents for inactive_user should raise AccessDenied
+        for id in doc_ids:
+            with pytest.raises(DocumentAccessDeniedException):
+                await DocumentService.get_file(id, inactive_user)
+
+        # get_file documents for not owner should raise AccessDenied
+        for id in doc_ids:
+            with pytest.raises(DocumentAccessDeniedException):
+                await DocumentService.get_file(id, admin_user)
+
+        non_existent_id = doc_ids[-1] + 10
+        with pytest.raises(DocumentNotFoundException):
+            await DocumentService.get_file(
+                id=non_existent_id, user=active_user
+            )
 
         # delete documents by owner
         for id in doc_ids:

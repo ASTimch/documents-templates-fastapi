@@ -58,14 +58,6 @@ class TemplateDAO(BaseDAO):
     @classmethod
     async def delete_(cls, id: pk_type) -> None:
         raise NotImplementedError
-        # async with async_session_maker() as session:
-        #     stmt = (
-        #         update(cls.model)
-        #         .where(cls.model.id == id)
-        #         .values(deleted=True)
-        #     )
-        #     await session.execute(stmt)
-        #     await session.commit()
 
 
 class UserTemplateFavoriteDAO(BaseDAO):
