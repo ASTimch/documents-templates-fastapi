@@ -19,7 +19,9 @@ app = FastAPI(
 
 app.include_router(routers.v1)
 app.include_router(routers.v2)
-app.mount("/static", StaticFiles(directory="app/static"), "static")
+app.mount(
+    "/static", StaticFiles(directory="/docx_storage/tpl_thumbnails/"), "static"
+)
 
 # подключение админки
 init_admin(app, engine)

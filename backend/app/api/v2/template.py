@@ -3,13 +3,12 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
 
+from app.auth import current_user_or_none
 from app.models.user import User
 from app.schemas.template import TemplateReadDTO, template_id_type
-from app.services.document import DocumentService
 from app.services.template import TemplateService
 
 view_router = APIRouter()
-from app.auth import current_user_or_none
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -35,8 +34,9 @@ async def view_get_all_templates(
     request: Request,
     user: Optional[User] = Depends(current_user_or_none),
 ) -> Optional[list[TemplateReadDTO]]:
-    dto_list = await TemplateService.get_all(user=user) if user else []
+    dto_list = await TemplateService.get_all(user=user)
     tpl_list = [dto.model_dump() for dto in dto_list]
     return templates.TemplateResponse(
-        "template_list.jinja", {"request": request, "data": tpl_list}
+        "template_list.jinja",
+        {"request": request, "data": tpl_list, "user": user},
     )

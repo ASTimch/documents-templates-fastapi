@@ -3,17 +3,12 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
 
+from app.auth import current_active_user
 from app.models.user import User
-from app.schemas.document import (
-    DocumentReadDTO,
-    DocumentReadMinifiedDTO,
-    DocumentWriteDTO,
-    document_id_type,
-)
+from app.schemas.document import DocumentReadMinifiedDTO, document_id_type
 from app.services.document import DocumentService
 
 view_router = APIRouter()
-from app.auth import current_active_user
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -29,7 +24,8 @@ async def view_document_by_id(
 ):
     dto = await DocumentService.get(id=document_id, user=user)
     return templates.TemplateResponse(
-        "document.jinja", {"request": request, "data": dto.model_dump()}
+        "document.jinja",
+        {"request": request, "data": dto.model_dump(), "user": user},
     )
 
 
@@ -43,5 +39,6 @@ async def view_get_all_documents(
     print(dto_list)
     print(docs_list)
     return templates.TemplateResponse(
-        "document_list.jinja", {"request": request, "data": docs_list}
+        "document_list.jinja",
+        {"request": request, "data": docs_list, "user": user},
     )
