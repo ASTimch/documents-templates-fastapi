@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, Response, UploadFile, status
+from fastapi import APIRouter, Depends, Query, Response, UploadFile, status
 from fastapi.responses import FileResponse, JSONResponse
 
 from app.auth import (
@@ -27,9 +27,13 @@ router = APIRouter()
 
 @router.get("/", summary="Получить все доступные шаблоны")
 async def get_all_templates(
+    favorited: Annotated[
+        bool | None, Query(title="Фильтр по избранному")
+    ] = None,
     user: Optional[User] = Depends(current_user_or_none),
 ) -> Optional[list[TemplateReadMinifiedDTO]]:
-    templates = await TemplateService.get_all(user=user)
+    print("favorited: ", favorited)
+    templates = await TemplateService.get_all(user=user, favorited=favorited)
     return templates
 
 

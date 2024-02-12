@@ -2,8 +2,6 @@ import logging
 from io import BytesIO
 from typing import Any, List, Optional, Tuple
 
-from icecream import ic
-
 from app.common.constants import Messages
 from app.common.exceptions import (
     DocumentAccessDeniedException,
@@ -26,6 +24,9 @@ from app.schemas.document import (
 from app.services.docx_render import DocxRender
 from app.services.pdf_converter import PdfConverter
 from app.services.template import TemplateService
+
+# from icecream import ic
+
 
 logger = logging.getLogger(__name__)
 

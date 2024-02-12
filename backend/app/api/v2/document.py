@@ -25,7 +25,12 @@ async def view_document_by_id(
     dto = await DocumentService.get(id=document_id, user=user)
     return templates.TemplateResponse(
         "document.jinja",
-        {"request": request, "data": dto.model_dump(), "user": user},
+        {
+            "request": request,
+            "data": dto.model_dump(),
+            "user": user,
+            "view_name": "view_document_by_id",
+        },
     )
 
 
@@ -40,5 +45,10 @@ async def view_get_all_documents(
     print(docs_list)
     return templates.TemplateResponse(
         "document_list.jinja",
-        {"request": request, "data": docs_list, "user": user},
+        {
+            "request": request,
+            "data": docs_list,
+            "user": user,
+            "view_name": "view_get_all_documents",
+        },
     )

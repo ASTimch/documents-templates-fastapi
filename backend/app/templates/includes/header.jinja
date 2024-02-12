@@ -1,4 +1,3 @@
-{# {% load static %} #}
 <header>
     {# <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark"> #}
     <nav class="navbar navbar-expand-lg navbar-light"
@@ -10,6 +9,10 @@
                        href="{{ url_for("view_get_all_templates") }}">Шаблоны</a>
                 </li>
                 {% if user %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if view_name == 'view_get_favorited_templates' %}active{% endif %}"
+                           href="{{ url_for("view_get_favorited_templates") }}">Избранное</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link {% if view_name == 'view_get_all_documents' %}active{% endif %}"
                            href="{{ url_for("view_get_all_documents") }}">Документы</a>

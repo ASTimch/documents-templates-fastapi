@@ -178,7 +178,10 @@ class TemplateService:
 
     @classmethod
     async def get_all(
-        cls, user: Optional[User] = None, include_deleted=False
+        cls,
+        user: Optional[User] = None,
+        favorited=None,
+        include_deleted=False,
     ) -> List[TemplateReadMinifiedDTO]:
         """Возвращает все шаблоны в сокращенном виде (без описания полей).
 
@@ -202,7 +205,8 @@ class TemplateService:
         for obj in obj_sequence:
             obj_dto = TemplateReadMinifiedDTO.model_validate(obj)
             obj_dto.is_favorited = obj.id in user_favorites
-            obj_dto_list.append(obj_dto)
+            if favorited is None or favorited == obj_dto.is_favorited:
+                obj_dto_list.append(obj_dto)
         return obj_dto_list
 
     @classmethod
