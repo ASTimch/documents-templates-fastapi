@@ -10,6 +10,7 @@ from app.auth import (
 )
 from app.common.utils import get_file_response
 from app.config import settings
+from app.logger import logger
 from app.models.user import User
 from app.schemas.template import (
     TemplateFieldWriteValueListDTO,
@@ -63,7 +64,10 @@ async def upload_docx_template(
 ):
     await TemplateService.update_docx_template(template_id, file)
     # Запуск фоновой задачи для генерации новой картинки thumbnail
-    generate_template_thumbnail.delay(template_id)
+    try:
+        generate_template_thumbnail.delay(template_id)
+    except Exception as e:
+        logger.exception(e)
 
 
 @router.post(

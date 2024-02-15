@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Any, Dict, Final, List, Literal, Tuple, TypeAlias
+from typing import Any, Dict, Final, List, Tuple
 
 import docxtpl
 import jinja2

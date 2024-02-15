@@ -20,7 +20,6 @@ async def view_get_favorited_templates(
 ) -> Optional[list[TemplateReadDTO]]:
     dto_list = await TemplateService.get_all(user=user, favorited=True)
     tpl_list = [dto.model_dump() for dto in dto_list]
-    print(tpl_list)
     return templates.TemplateResponse(
         "template_list.jinja",
         {
