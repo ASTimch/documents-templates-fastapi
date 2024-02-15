@@ -88,7 +88,7 @@ PATCH запрос по адресу /api/v1/template/{id}/upload_template
 
 #### Доступ к визуальному интерфейсу:
 
-    localhost:9000/view/
+    localhost/view/
 
 
 
