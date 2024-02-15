@@ -55,12 +55,12 @@ class TemplateFieldTypeService:
 
     @classmethod
     async def add(
-        cls, obj: TemplateFieldTypeWriteDTO
+        cls, dto: TemplateFieldTypeWriteDTO
     ) -> Optional[TemplateFieldTypeReadDTO]:
         """Добавить новый тип в БД.
 
         Args:
-            obj (TemplateFieldTypeWriteDTO): описание нового типа.
+            dto: описание нового типа.
 
         Returns:
             TemplateFieldTypeReadDTO: описание добавленного типа.
@@ -69,32 +69,32 @@ class TemplateFieldTypeService:
             TypeFieldAlreadyExistsException: если тип уже существует.
         """
 
-        obj_db = await TemplateFieldTypeDAO.get_one_or_none(type=obj.type)
+        obj_db = await TemplateFieldTypeDAO.get_one_or_none(type=dto.type)
         if obj_db:
             raise TypeFieldAlreadyExistsException(
-                detail=Messages.TYPE_FIELD_ALREADY_EXISTS.format(obj.type)
+                detail=Messages.TYPE_FIELD_ALREADY_EXISTS.format(dto.type)
             )
-        obj_db = await TemplateFieldTypeDAO.create(**obj.model_dump())
+        obj_db = await TemplateFieldTypeDAO.create(**dto.model_dump())
         return TemplateFieldTypeReadDTO.model_validate(obj_db)
 
     @classmethod
     async def add_list(
-        cls, obj_list: list[TemplateFieldTypeWriteDTO]
+        cls, dto_list: list[TemplateFieldTypeWriteDTO]
     ) -> Optional[list[TemplateFieldTypeReadDTO]]:
         """Добавить все объекты из списка obj_list.
 
         Args:
-            obj_list (list[TemplateFieldTypeWriteDTO]): список новых типов.
+            dto_list: список новых типов.
 
         Returns:
             list[TemplateFieldTypeReadDTO]: список добавленных типов.
 
         Raises:
             TypeFieldAlreadyExistsException: при попытке добавить тип,
-            который уже существует.
+                который уже существует.
         """
         obj_dict_list = []
-        for obj in obj_list:
+        for obj in dto_list:
             obj_by_type = await TemplateFieldTypeDAO.get_one_or_none(
                 type=obj.type
             )
@@ -110,13 +110,13 @@ class TemplateFieldTypeService:
 
     @classmethod
     async def update(
-        cls, id: pk_type, obj: TemplateFieldTypeWriteDTO
+        cls, id: pk_type, dto: TemplateFieldTypeWriteDTO
     ) -> TemplateFieldTypeReadDTO:
         """Обновить объект с заданным идентификатором.
 
         Args:
-            id (pk_type): идентификатор обновляемого объекта.
-            obj (TemplateFieldTypeWriteDTO): значения обновляемых полей.
+            id: идентификатор обновляемого объекта.
+            dto: значения обновляемых полей.
 
         Returns:
             TemplateFieldTypeReadDTO: обновленный объект.
@@ -124,7 +124,7 @@ class TemplateFieldTypeService:
         Raises:
             TypeFieldNotFoundException: если объект с заданным id не найден.
             TypeFieldAlreadyExistsException: при попытке создать тип с
-            дублирующим наименованием.
+                дублирующим наименованием.
         """
 
         obj_by_id = await TemplateFieldTypeDAO.get_by_id(id)
@@ -132,12 +132,12 @@ class TemplateFieldTypeService:
             raise TypeFieldNotFoundException(
                 detail=Messages.TYPE_FIELD_NOT_FOUND.format(id)
             )
-        obj_by_type = await TemplateFieldTypeDAO.get_one_or_none(type=obj.type)
+        obj_by_type = await TemplateFieldTypeDAO.get_one_or_none(type=dto.type)
         if obj_by_type and obj_by_type.id != id:
             raise TypeFieldAlreadyExistsException(
-                detail=Messages.TYPE_FIELD_ALREADY_EXISTS.format(obj.type)
+                detail=Messages.TYPE_FIELD_ALREADY_EXISTS.format(dto.type)
             )
-        obj_by_id = await TemplateFieldTypeDAO.update_(id, **obj.model_dump())
+        obj_by_id = await TemplateFieldTypeDAO.update_(id, **dto.model_dump())
         return obj_by_id
 
     @classmethod
@@ -145,7 +145,7 @@ class TemplateFieldTypeService:
         """Удалить объект с заданным идентификатором.
 
         Args:
-            id (pk_type): идентификатор удаляемого объекта.
+            id: идентификатор удаляемого объекта.
 
         Raises:
             TypeFieldNotFoundException: если объект с заданным id не найден.

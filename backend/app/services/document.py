@@ -1,4 +1,3 @@
-import logging
 from io import BytesIO
 from typing import Any, List, Optional, Tuple
 
@@ -13,6 +12,7 @@ from app.common.exceptions import (
 )
 from app.config import settings
 from app.crud.document_dao import DocumentDAO, DocumentFieldDAO
+from app.logger import logger
 from app.models.base import pk_type
 from app.models.document import Document
 from app.models.user import User
@@ -26,9 +26,6 @@ from app.services.pdf_converter import PdfConverter
 from app.services.template import TemplateService
 
 # from icecream import ic
-
-
-logger = logging.getLogger(__name__)
 
 
 class DocumentService:
@@ -45,7 +42,7 @@ class DocumentService:
         Все поля должны принадлежать заданному существующему шаблону.
 
         Args:
-            dto (DocumentWriteDTO): объект для создания документа.
+            dto: объект для создания документа.
 
         Raises:
             DocumentConflictException: несогласованность полей.
@@ -79,9 +76,9 @@ class DocumentService:
         """Назначение всем полям родительского документа document_id.
 
         Args:
-            fields (list[dict]): Список описаний полей вида:
+            fields: Список описаний полей вида:
                 {'field_id':<идентификатор поля>, "value": <значение>}
-            document_id (pk_type): Идентификатор родительского документа.
+            document_id: Идентификатор родительского документа.
 
         Returns:
             Преобразованный список полей. Исключены все поля с "value"=None
@@ -192,8 +189,8 @@ class DocumentService:
         """Возвращает документ с заданным id с описанием всех его полей.
 
         Args:
-            id (pk_type): Идентификатор документа в б.д.
-            user(User): Пользователь для которого генерируется ответ.
+            id: Идентификатор документа в б.д.
+            user: Пользователь для которого генерируется ответ.
 
         Returns:
             DocumentReadDTO: Документ со всеми полями и их описанием.
@@ -216,7 +213,7 @@ class DocumentService:
         (без описания полей).
 
         Args:
-            user (User): пользователь автор документов.
+            user: пользователь автор документов.
             filter_by: Имена и значения параметров для фильтрации.
 
         Returns:
@@ -237,8 +234,8 @@ class DocumentService:
         """Удалить документ с заданным id.
 
         Args:
-            id (pk_type): идентификатор документа.
-            user (User): пользователь.
+            id: идентификатор документа.
+            user: пользователь.
 
         Raises:
             DocumentNotFoundException: документ с заданным id отсутствует.
@@ -258,9 +255,9 @@ class DocumentService:
         """Изменить/обновить документ.
 
         Args:
-            id (pk_type): Идентификатор документа.
-            dto (DocumentWriteDTO): Поля документа.
-            user (User): Пользователь.
+            id: Идентификатор документа.
+            dto: Поля документа.
+            user: Пользователь.
 
         Returns:
             DocumentReadDTO: Документ со всеми полями и их описанием.
@@ -296,14 +293,14 @@ class DocumentService:
 
     @classmethod
     async def get_file(
-        cls, id: pk_type, user: User, pdf=False
+        cls, id: pk_type, user: User, pdf: bool = False
     ) -> Tuple[BytesIO, str]:
         """Возвращает документ с заполненными полями в формате docx или pdf.
 
         Args:
-            id (pk_type): Идентификатор документа.
-            pdf (bool): True для формата pdf, False для формата docx.
-            user (User): Пользователь для которого генерируется документ.
+            id: Идентификатор документа.
+            pdf: True для формата pdf, False для формата docx.
+            user: Пользователь для которого генерируется документ.
 
         Returns:
             (file (BytesIO), filename (str)): сгенерированный файл и имя.
@@ -356,6 +353,6 @@ class DocumentService:
                     name=doc.description, ext="pdf"
                 )
             except Exception as e:
-                logging.exception(e)
+                logger.exception(e)
                 raise TemplatePdfConvertErrorException()
         return buffer, filename

@@ -3,24 +3,24 @@ import subprocess
 import sys
 import tempfile
 from io import BytesIO
-from typing import Literal, Optional, TypeAlias
+from typing import Literal, TypeAlias
 
-from fastapi import logger
 from pdf2image import convert_from_bytes
 from PIL.Image import Image
 
 from app.common.exceptions import TemplatePdfConvertErrorException
+from app.logger import logger
 
 img_format: TypeAlias = Literal["png", "jpeg", "tiff", "ppm"]
 
 
 class PdfConverter:
     @classmethod
-    def _docx_to_pdf_win32(cls, in_file: BytesIO) -> Optional[BytesIO]:
+    def _docx_to_pdf_win32(cls, in_file: BytesIO) -> BytesIO:
         """Конвертирует docx файл pdf-файла на платформах win32.
 
         Args:
-            in_file (ByresIO): содержимое входного docx файла.
+            in_file: содержимое входного docx файла.
 
         Returns:
             BytesIO: результирующий файл в формате pdf.
@@ -52,13 +52,13 @@ class PdfConverter:
         return out_buffer
 
     @classmethod
-    def _docx_to_pdf_linux(cls, in_file: BytesIO) -> Optional[BytesIO]:
+    def _docx_to_pdf_linux(cls, in_file: BytesIO) -> BytesIO:
         """Конвертирует docx файл pdf-файла на платформах linux.
 
         Для конвертации использует libreoffice.
 
         Args:
-            in_file (ByresIO): содержимое входного docx файла.
+            in_file: содержимое входного docx файла.
 
         Returns:
             BytesIO: результирующий файл в формате pdf.
@@ -101,7 +101,7 @@ class PdfConverter:
         Для конвертации win32 использует Word, для linux - libreoffice.
 
         Args:
-            in_file (ByresIO): содержимое входного docx файла.
+            in_file: содержимое входного docx файла.
 
         Returns:
             BytesIO: результирующий файл в формате pdf.
@@ -122,8 +122,10 @@ class PdfConverter:
         """Генерирует превью для заданного pdf файла.
 
         Args:
-            pdf_file (BytesIO): исходный файл pdf.
-            width (int), height (int): размеры результирующей картинки.
+            pdf_file: исходный файл pdf.
+            width: ширина результирующей картинки.
+            height: высота результирующей картинки.
+
         Returns:
             PIL.Image.Image: фрагмент первой страницы заданных размеров.
         """
@@ -145,9 +147,11 @@ class PdfConverter:
         """Генерирует превью для заданного pdf файла в заданном формате.
 
         Args:
-            pdf_file (BytesIO): исходный файл pdf.
-            width (int), height (int): размеры результирующей картинки.
-            format (str): заданный формат результата (png, jpeg, tiff, ppm).
+            pdf_file: исходный файл pdf.
+            width: ширина результирующей картинки.
+            height: высота результирующей картинки.
+            format: заданный формат результата (png, jpeg, tiff, ppm).
+
         Returns:
             BytesIO: картинка превью заданных размеров в нужном формате.
         """

@@ -1,4 +1,3 @@
-import logging
 from io import BytesIO
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -16,7 +15,12 @@ from app.common.exceptions import (
     TypeFieldNotFoundException,
 )
 from app.config import settings
-from app.crud.template_dao import TemplateDAO, TemplateFieldDAO, TemplateFieldGroupDAO
+from app.crud.template_dao import (
+    TemplateDAO,
+    TemplateFieldDAO,
+    TemplateFieldGroupDAO,
+)
+from app.logger import logger
 from app.models.base import pk_type
 from app.models.template import Template
 from app.models.user import User
@@ -29,13 +33,6 @@ from app.services.docx_render import DocxRender
 from app.services.favorite import TemplateFavoriteService
 from app.services.pdf_converter import PdfConverter
 from app.services.template_field_type import TemplateFieldTypeService
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s, %(levelname)s, %(message)s",
-)
-
-logger = logging.getLogger(__name__)
 
 
 class TemplateService:
@@ -53,9 +50,9 @@ class TemplateService:
         """Замена наименований типов идентификаторами из type_id_mapping.
 
         Args:
-            fields (list[dict[str, Any]]): список описаний полей.
-            type_id_mapping (dict[str:pk_type]): словарь соответствия
-            наименований типов соответствующим идентификаторам из б.д.
+            fields: список описаний полей.
+            type_id_mapping: словарь соответствия наименований типов
+                соответствующим идентификаторам из б.д.
 
         Raises:
             TypeFieldNotFoundException: если обнаружен неизвестный тип.
@@ -81,8 +78,11 @@ class TemplateService:
             field["template_id"] = template_id
 
     @classmethod
-    async def add(cls, obj: TemplateWriteDTO) -> Optional[pk_type]:
+    async def add(cls, dto: TemplateWriteDTO) -> pk_type:
         """Добавить новый шаблон в б.д.
+
+        Args:
+            dto: Объект шаблона для добавления в базу.
 
         Returns:
             pk_type: идентификатор созданного объекта шаблон.
@@ -90,7 +90,7 @@ class TemplateService:
         type_id_mapping = (
             await TemplateFieldTypeService.get_all_type_id_mapping()
         )
-        obj_dict = obj.model_dump()
+        obj_dict = dto.model_dump()
         group_dicts = obj_dict.pop("grouped_fields")
         field_dicts = obj_dict.pop("ungrouped_fields")
         for group in group_dicts:
@@ -113,18 +113,18 @@ class TemplateService:
         return template.id
 
     @classmethod
-    async def get_or_raise_not_found(cls, id: pk_type) -> Optional[Template]:
+    async def get_or_raise_not_found(cls, id: pk_type) -> Template:
         """Поиск шаблона по идентификатору.
 
         Args:
-            id (pk_type): идентификатор шаблона.
+            id: идентификатор шаблона.
 
         Returns:
             Template: объект шаблона с заданным id.
 
         Raises:
             TemplateNotFoundException: если объект с заданным id
-            отсутствует или удален.
+                отсутствует или удален.
         """
         obj = await TemplateDAO.get_by_id(id)
         if not obj or obj.deleted:
@@ -134,19 +134,19 @@ class TemplateService:
     @classmethod
     async def get(
         cls, *, id: pk_type, user: Optional[User] = None
-    ) -> Optional[TemplateReadDTO]:
+    ) -> TemplateReadDTO:
         """Возвращает ответ для шаблона с заданным id.
 
         Args:
-            id (int): идентификатор шаблона в б.д.
-            user(User): пользователь для которого генерируется ответ.
+            id: идентификатор шаблона в б.д.
+            user: пользователь для которого генерируется ответ.
 
         Returns:
-            TemplateReadDTO: все поля шаблона и описание его полей.
+            TemplateReadDTO: объект шаблона с описанием полей.
 
         Raises:
             TemplateNotFoundException: если шаблон с заданным id
-            отсутствует или удален.
+                отсутствует или удален.
         """
         obj = await cls.get_or_raise_not_found(id)
         groups_dicts = {group.id: group.to_dict() for group in obj.groups}
@@ -182,8 +182,9 @@ class TemplateService:
         """Возвращает все шаблоны в сокращенном виде (без описания полей).
 
         Args:
-            user (User): пользователь для которого генерируется ответ.
-            include_deleted (bool): включать ли в ответ удаленные шаблоны.
+            user: пользователь для которого генерируется ответ.
+            favorited: используемый фильтр по полю is_favorited.
+            include_deleted: включать ли в ответ удаленные шаблоны.
 
         Returns:
             list[TemplateReadMinifiedDTO]: список доступных шаблонов.
@@ -210,8 +211,8 @@ class TemplateService:
         """Обновить docx файл шаблона с заданным идентификатором.
 
         Args:
-            id (pk_type): идентификатор шаблона в б.д.
-            file(UploadFile): загруженный docx файл шаблона.
+            id: идентификатор шаблона в б.д.
+            file: загруженный docx файл шаблона.
         """
         obj_db = await cls.get_or_raise_not_found(id)
         file.filename = cls.DOCX_FILENAME_FORMAT.format(id=obj_db.id)
@@ -229,11 +230,11 @@ class TemplateService:
         После генерации обновляет поле thumbnail шаблона в базе данных.
 
         Args:
-            template_id (pk_type): идентификатор шаблона.
+            template_id: идентификатор шаблона.
 
         Raises:
             TemplateNotFoundException: если шаблон с заданным template_id
-            отсутствует или удален.
+                отсутствует или удален.
         """
         obj_db = await cls.get_or_raise_not_found(template_id)
         pdf_buffer, _ = await TemplateService.get_draft(template_id, pdf=True)
@@ -260,7 +261,7 @@ class TemplateService:
         """Удалить шаблон с заданным id.
 
         Args:
-            id (pk_type): идентификатор шаблона.
+            id: идентификатор шаблона.
 
         Raises:
             TemplateNotFoundException: если шаблон с заданным id отсутствует.
@@ -281,7 +282,7 @@ class TemplateService:
         Возвращает списки несогласованных тэгов между БД и шаблоном docx.
 
         Args:
-            id (pk_type): идентификатор шаблона в б.д.
+            id: идентификатор шаблона в б.д.
 
         Returns:
             (excess_tags, excess_fields): кортежи ошибочных тэгов
@@ -353,7 +354,6 @@ class TemplateService:
             return {"errors": errors}
         return {"result": Messages.TEMPLATE_CONSISTENT}
 
-
     @classmethod
     async def get_draft(cls, id: pk_type, pdf=False) -> Tuple[BytesIO, str]:
         """Возвращает черновик документа в формате docx или pdf.
@@ -362,8 +362,8 @@ class TemplateService:
         Имя файла filename формируется по полю title шаблона.
 
         Args:
-            id (pk_type): идентификатор шаблона.
-            pdf (bool): True для формата pdf, False для формата docx.
+            id: идентификатор шаблона.
+            pdf: True для формата pdf, False для формата docx.
 
         Returns:
             (file (BytesIO), filename (str)): сгенерированный файл и имя.
@@ -400,10 +400,10 @@ class TemplateService:
         """Возвращает документ с заполненными полями в формате docx или pdf.
 
         Args:
-            id (pk_type): идентификатор шаблона.
-            field_values (list[dict[str]]): список значений полей в виде
-            {"field_id":id, "value":значение}
-            pdf (bool): True для формата pdf, False для формата docx.
+            id: идентификатор шаблона.
+            field_values: список значений полей в виде
+                {"field_id":id, "value":значение}
+            pdf: True для формата pdf, False для формата docx.
 
         Returns:
             (file (BytesIO), filename (str)): сгенерированный файл и имя.
@@ -411,7 +411,7 @@ class TemplateService:
         Raises:
             TemplateNotFoundException: если шаблон с заданным id отсутствует.
             TemplateFieldNotFoundException: если field_values содержит
-            ошибочные 'field_id', отсутствующие в полях шаблона.
+                ошибочные 'field_id', отсутствующие в полях шаблона.
             TemplateRenderErrorException: при ошибках генерации docx.
             TemplatePdfConvertErrorException: при ошибках генерации pdf.
 
@@ -449,6 +449,6 @@ class TemplateService:
                     name=tpl.title, ext="pdf"
                 )
             except Exception as e:
-                logging.exception(e)
+                logger.exception(e)
                 raise TemplatePdfConvertErrorException()
         return buffer, filename

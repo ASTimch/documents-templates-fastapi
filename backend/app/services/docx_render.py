@@ -11,9 +11,17 @@ from num2words import num2words
 
 morph = pymorphy2.MorphAnalyzer()
 
-InflectCase: TypeAlias = Literal[
-    "nomn", "gent", "datv", "accs", "ablt", "loct", "voct"
-]
+
+class InflectCase:
+    """Падежи для фильтра."""
+
+    nomn: Final[str] = "nomn"  # именительный
+    gent: Final[str] = "gent"  # родительный
+    datv: Final[str] = "datv"  # дательный
+    accs: Final[str] = "accs"  # винительный
+    ablt: Final[str] = "ablt"  # творительный
+    loct: Final[str] = "loct"  # предложный
+    voct: Final[str] = "voct"  # звательный
 
 
 class CustomFilters:
@@ -30,10 +38,13 @@ class CustomFilters:
     def _skip_filter(self, tag: str) -> Tuple[bool, Any]:
         """Проверяет, нужно ли отключить/пропустить фильтр.
 
+        Args:
+            tag: Наименование тэга.
+
         Returns:
             (skip, value)
-            skip (bool): True, если фильтр должен быть отключен.
-            value (str): значение возвращаемое вместо значения тега.
+                skip (bool): True, если фильтр должен быть отключен.
+                value (Any): значение возвращаемое вместо значения тега.
         """
         if (
             not self._enabled
@@ -67,16 +78,16 @@ class CustomFilters:
     def inflect_word(
         self,
         word: str,
-        case: InflectCase,
+        case: str,
     ) -> str:
-        """Преобразование слова в заданный падеж
+        """Преобразование слова в заданный падеж.
 
         Args:
-            word(str): преобразуемое слово.
-            case(str): требуемый падеж
-        'nomn' именительный, 'gent' родительный, 'datv' дательный,
-        'accs' винительный, 'ablt' творительный, 'loct' предложный,
-        'voct' звательный.
+            word(str): Преобразуемое слово.
+            case(str): Требуемый падеж.
+                'nomn' именительный, 'gent' родительный, 'datv' дательный,
+                'accs' винительный, 'ablt' творительный, 'loct' предложный,
+                'voct' звательный.
 
         Returns:
             str: слово, преобразованное в заданный падеж.
@@ -84,21 +95,25 @@ class CustomFilters:
         if not word:
             return word
         try:
-            p = next(filter(lambda x: {"nomn"} in x.tag, morph.parse(word)))
+            p = next(
+                filter(
+                    lambda x: {InflectCase.nomn} in x.tag, morph.parse(word)
+                )
+            )
         except StopIteration:
-            print("Not found nomn form for ", word)
+            print("Not found 'nomn' form for ", word)
             return word
         return p.inflect({case}).word
 
-    def inflect_words(self, words: str, case: InflectCase) -> str:
-        """Преобразование каждого из слов в строке в заданный падеж
+    def inflect_words(self, words: str, case: str) -> str:
+        """Преобразование каждого из слов в строке в заданный падеж.
 
         Args:
-            words(str): строка из нескольких слова.
-            case(str): требуемый падеж
-        'nomn' именительный, 'gent' родительный, 'datv' дательный,
-        'accs' винительный, 'ablt' творительный, 'loct' предложный,
-        'voct' звательный.
+            words(str): Строка из нескольких слов.
+            case(str): Требуемый падеж
+                'nomn' именительный, 'gent' родительный, 'datv' дательный,
+                'accs' винительный, 'ablt' творительный, 'loct' предложный,
+                'voct' звательный.
 
         Returns:
             str: строка, каждое слово которого преобразовано в заданный падеж.
@@ -110,28 +125,28 @@ class CustomFilters:
         skip, value = self._skip_filter(words)
         if skip:
             return value
-        return self.inflect_words(words, "gent")
+        return self.inflect_words(words, InflectCase.gent)
 
     def dative(self, words: str) -> str:
         """Преобразует все слова строки в дательный падеж."""
         skip, value = self._skip_filter(words)
         if skip:
             return value
-        return self.inflect_words(words, "datv")
+        return self.inflect_words(words, InflectCase.datv)
 
     def ablt(self, words: str) -> str:
         """Преобразует все слова строки в творительный падеж."""
         skip, value = self._skip_filter(words)
         if skip:
             return value
-        return self.inflect_words(words, "ablt")
+        return self.inflect_words(words, InflectCase.ablt)
 
     def loct(self, words: str) -> str:
         """Преобразует все слова строки в предложный падеж."""
         skip, value = self._skip_filter(words)
         if skip:
             return value
-        return self.inflect_words(words, "loct")
+        return self.inflect_words(words, InflectCase.loct)
 
     def noun_plural(self, word: str, n: int) -> str:
         """Склонение заданного существительного в зависимости от числа n.
@@ -153,9 +168,9 @@ class CustomFilters:
             return word
         word = morph.parse(word)[0]
         words = (
-            word.inflect({"sing", "nomn"}).word,  # 'день'
-            word.inflect({"gent"}).word,  # 'дня'
-            word.inflect({"plur", "gent"}).word,  # 'дней'
+            word.inflect({"sing", InflectCase.nomn}).word,  # 'день'
+            word.inflect({InflectCase.gent}).word,  # 'дня'
+            word.inflect({"plur", InflectCase.gent}).word,  # 'дней'
         )
 
         n_mod100 = n % 100
@@ -186,8 +201,8 @@ class CustomFilters:
         word = morph.parse(word)[0]
         number_mod100 = number % 100
         if number % 10 == 1 and number_mod100 != 11:
-            return word.inflect({"sing", "nomn"}).word  # 'новый'
-        return word.inflect({"plur", "gent"}).word  # 'новых'
+            return word.inflect({"sing", InflectCase.nomn}).word  # 'новый'
+        return word.inflect({"plur", InflectCase.gent}).word  # 'новых'
 
     def currency_to_words(self, num) -> str:
         """Преобразует заданную сумму в представление прописью."""
@@ -295,11 +310,12 @@ class DocxRender:
         маркируются желтым цветом (как не заполненные).
 
         Args:
-            context: словарь значения полей вида {тэг:значение}
-            context_default: словарь значений по умолчанию вида
-            {тэг:значение по умолчанию}
+            context: Словарь значения полей вида {тэг:значение}.
+            context_default: Словарь значений по умолчанию вида
+                {тэг: значение по умолчанию}.
+
         Returns:
-            BytesIO: документ после замены в шаблоне всех тегов на значения.
+            BytesIO: Документ после замены в шаблоне всех тегов на значения.
         """
         self._customfilters.enable(True)  # switch custom filters on
         self._template.init_docx()

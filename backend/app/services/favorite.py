@@ -12,8 +12,8 @@ class TemplateFavoriteService:
         """Добавить шаблон в список избранного для пользователя.
 
         Args:
-            user_id (pk_type): идентификатор пользователя.
-            template_id (pk_type): идентификатор шаблона.
+            user_id: идентификатор пользователя.
+            template_id: идентификатор шаблона.
 
         Raises:
             UserTemplateFavoriteAlreadyExistsException: шаблон уже в избранном.
@@ -23,7 +23,7 @@ class TemplateFavoriteService:
         )
         if obj_db:
             raise UserTemplateFavoriteAlreadyExistsException()
-        return await UserTemplateFavoriteDAO.create(
+        await UserTemplateFavoriteDAO.create(
             user_id=user_id, template_id=template_id
         )
 
@@ -32,8 +32,8 @@ class TemplateFavoriteService:
         """Удалить шаблон из списка избранного для пользователя.
 
         Args:
-            user_id (pk_type): идентификатор пользователя.
-            template_id (pk_type): идентификатор шаблона.
+            user_id: идентификатор пользователя.
+            template_id: идентификатор шаблона.
 
         Raises:
             UserTemplateFavoriteDoesNotExistsException: шаблон не в избранном.
@@ -52,10 +52,10 @@ class TemplateFavoriteService:
         """Находится ли шаблон в списке избранного для пользователя.
 
         Args:
-            user_id (pk_type): идентификатор пользователя.
-            template_id (pk_type): идентификатор шаблона.
+            user_id: идентификатор пользователя.
+            template_id: идентификатор шаблона.
 
-        Return:
+        Returns:
             bool: True, если шаблон содержится в списке избранного;
             False, если шаблон отсутствует в списке избранного.
         """
@@ -69,9 +69,9 @@ class TemplateFavoriteService:
         """Возвращает идентификаторы всех избранных шаблонов для пользователя.
 
         Args:
-            user_id (pk_type): идентификатор пользователя.
+            user_id: идентификатор пользователя.
 
-        Return:
+        Returns:
             list[pk_type]: список идентификаторов из списка избранного.
         """
         obj_db = await UserTemplateFavoriteDAO.get_all(user_id=user_id)
