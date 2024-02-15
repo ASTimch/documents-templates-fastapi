@@ -5,6 +5,8 @@ __pycache__/
 pyproject.toml
 
 media/
+.env-docker
+.env-prod
 
 # working file
 test_requests.txt

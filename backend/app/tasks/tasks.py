@@ -15,13 +15,3 @@ def generate_template_thumbnail(template_id: int):
         "Завершена фоновая задача: "
         f"generate_template_thumbnail({template_id})"
     )
-
-
-# Задел для документов
-# @celery_app.task(name="generate_document_thumbnail")
-# def generate_document_thumbnail(document_id: int):
-#     asyncio.run(DocumentService.generate_thumbnail(document_id))
-#     logger.info(
-#         "Завершена фоновая задача: "
-#         f"generate_document_thumbnail({document_id})"
-#     )

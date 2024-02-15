@@ -67,8 +67,8 @@ class Settings(BaseSettings):
     TEMPLATE_DOCX_DIR: str = "/docx_storage/tpl_docx/"
     TEMPLATE_THUMBNAIL_DIR: str = "/docx_storage/tpl_thumbnails/"
 
-    THUMBNAIL_HEIGHT: int = 300
-    THUMBNAIL_WIDTH: int = 300
+    THUMBNAIL_HEIGHT: int = 200
+    THUMBNAIL_WIDTH: int = 250
     THUMBNAIL_FORMAT: str = "png"
 
     model_config = SettingsConfigDict(

@@ -79,10 +79,9 @@ class DocumentService:
         """Назначение всем полям родительского документа document_id.
 
         Args:
-            fields (list[dict]): список описаний полей вида:
-            {"field_id":<идентификатор поля>, "value": <значение>}
-
-            document_id (pk_type): идентификатор родительского документа.
+            fields (list[dict]): Список описаний полей вида:
+                {'field_id':<идентификатор поля>, "value": <значение>}
+            document_id (pk_type): Идентификатор родительского документа.
 
         Returns:
             Преобразованный список полей. Исключены все поля с "value"=None
@@ -104,7 +103,14 @@ class DocumentService:
 
     @classmethod
     def _model_as_dto(cls, obj: Document) -> DocumentReadDTO:
-        """Преобразование модели документа в DTO для выдачи."""
+        """Преобразование модели документа в DTO для выдачи.
+
+        Args:
+            obj: Объект модели документа.
+
+        Returns:
+            Объект типа DocumentReadDto.
+        """
         groups_dicts = {
             group.id: group.to_dict() for group in obj.template.groups
         }
@@ -133,6 +139,10 @@ class DocumentService:
         cls, dto: DocumentWriteDTO, owner: User
     ) -> Optional[pk_type]:
         """Сохранить новый документ.
+
+        Args:
+            dto: Объект документа для записи.
+            owner: Объект пользователя владельца документа.
 
         Returns:
             pk_type: идентификатор созданного объекта документ.
@@ -168,8 +178,7 @@ class DocumentService:
             Document: объект документа с заданным id.
 
         Raises:
-            DocumentNotFoundException: если объект с заданным id
-            отсутствует.
+            DocumentNotFoundException: если объект с заданным id отсутствует.
         """
         obj = await DocumentDAO.get_by_id(id)
         if not obj:
@@ -183,15 +192,15 @@ class DocumentService:
         """Возвращает документ с заданным id с описанием всех его полей.
 
         Args:
-            id (int): идентификатор документа в б.д.
-            user(User): пользователь для которого генерируется ответ.
+            id (pk_type): Идентификатор документа в б.д.
+            user(User): Пользователь для которого генерируется ответ.
 
         Returns:
-            DocumentReadDTO: документ со всеми полями и их описанием.
+            DocumentReadDTO: Документ со всеми полями и их описанием.
 
         Raises:
-            DocumentNotFoundException: документ с заданным id не найден.
-            DocumentAccessDeniedException: неавторизованный доступ.
+            DocumentNotFoundException: Документ с заданным id не найден.
+            DocumentAccessDeniedException: Неавторизованный доступ.
         """
         obj = await cls.get_or_raise_not_found(id)
         # запрет доступа всем, кроме владельца документа
@@ -208,6 +217,7 @@ class DocumentService:
 
         Args:
             user (User): пользователь автор документов.
+            filter_by: Имена и значения параметров для фильтрации.
 
         Returns:
             list[DocumentReadMinifiedDTO]: список документов.
@@ -257,7 +267,7 @@ class DocumentService:
 
         Raises:
             DocumentAccessDeniedException: Если пользователь деактивирован
-            или не является владельцем документа.
+                или не является владельцем документа.
             DocumentNotFoundException: Документ не найден.
             DocumentConflictException: Поля документа не согласованны.
         """
@@ -291,16 +301,19 @@ class DocumentService:
         """Возвращает документ с заполненными полями в формате docx или pdf.
 
         Args:
-            id (pk_type): идентификатор документа.
+            id (pk_type): Идентификатор документа.
             pdf (bool): True для формата pdf, False для формата docx.
+            user (User): Пользователь для которого генерируется документ.
 
         Returns:
             (file (BytesIO), filename (str)): сгенерированный файл и имя.
 
         Raises:
             DocumentNotFoundException: если документ с заданным id отсутствует.
+            DocumentAccessDeniedException: если пользователь не активен или
+                не является автором документа.
             TemplateFieldNotFoundException: если field_values содержит
-            ошибочные 'field_id', отсутствующие в полях шаблона.
+                ошибочные 'field_id', отсутствующие в полях шаблона.
             TemplateRenderErrorException: при ошибках генерации docx.
             TemplatePdfConvertErrorException: при ошибках генерации pdf.
 
