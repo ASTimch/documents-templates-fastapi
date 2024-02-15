@@ -1,0 +1,34 @@
+{% extends "base.jinja" %}
+{% block title %}
+    Мои Документы
+{% endblock title %}
+{% block content %}
+    <div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Наименование</th>
+                    <th scope="col">Шаблон</th>
+                    <th scope="col">Дата изменения</th>
+                    <th scope="col">Опции</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in data %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('view_document_by_id',document_id=doc.id) }}">{{ doc.description }}</a>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('view_template_by_id',template_id=doc.template_id) }}">{{ doc.template_title }}</a>
+                        </td>
+                        <td>{{ doc.updated_at.strftime("%d %b %Y") }}</td>
+                        <td></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock content %}
+{% block scripts %}
+{% endblock scripts %}
