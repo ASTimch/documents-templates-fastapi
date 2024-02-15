@@ -65,8 +65,8 @@
 
 ### Просмотр документации по api:
 ```
-    localhost:9000/api/v1/docs
-    localhost:9000/api/v1/redoc
+    localhost/api/v1/docs
+    localhost/api/v1/redoc
 ```
 
 ## Инициализация базы начальными данными:
