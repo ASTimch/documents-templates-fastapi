@@ -39,6 +39,7 @@
 - **SQLAlchemy - 2.0**
 - **Pydantic - 2.5**
 - **PostgreSQL - 13.10**
+- **pytest**
 - **Redis**
 - **Celery**
 - **jinja**
