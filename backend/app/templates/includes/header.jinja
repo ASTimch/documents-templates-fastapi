@@ -1,0 +1,46 @@
+<header>
+    {# <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark"> #}
+    <nav class="navbar navbar-expand-lg navbar-light"
+         style="background-color: lightskyblue">
+        <div class="container">
+            <ul class="nav nav-pills justify-content-start">
+                <li class="nav-item">
+                    <a class="nav-link {% if view_name == 'view_get_all_templates' %}active{% endif %}"
+                       href="{{ url_for("view_get_all_templates") }}">Шаблоны</a>
+                </li>
+                {% if user %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if view_name == 'view_get_favorited_templates' %}active{% endif %}"
+                           href="{{ url_for("view_get_favorited_templates") }}">Избранное</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if view_name == 'view_get_all_documents' %}active{% endif %}"
+                           href="{{ url_for("view_get_all_documents") }}">Документы</a>
+                    </li>
+                    <span class="navbar-text">|</span>
+                    <li class="nav-item">
+                        {# <a class="nav-link" href="/api/v1/auth/logout" data-metod="post">User:{{ user }}</a> #}
+                        <div class="nav-link">{{ user }}</div>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           href=""
+                           onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Выход</a>
+                    </li>
+                    <form id="logout-form"
+                          action="/api/v1/auth/logout"
+                          method="POST"
+                          style="display: none">
+                        <button type="submit" class="logout-link">Logout</button>
+                    </form>
+                {% else %}
+                    <span class="navbar-text">|</span>
+                    <li class="nav-item">
+                        <a class="nav-link {% if view_name == 'view_auth_login' %}active{% endif %}"
+                           href="{{ url_for("view_auth_login") }}">Авторизация</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+</header>

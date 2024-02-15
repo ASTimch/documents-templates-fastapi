@@ -1,0 +1,33 @@
+{% extends "base.jinja" %}
+{% block title %}
+    Мои Документы
+{% endblock title %}
+{% block content %}
+    <div>
+        <div class="card-group">
+            {% for tpl in data %}
+                <div class="col-sm-6">
+                    <div class="card" style="width: 18rem;">
+                        <a href="{{ url_for('view_template_by_id',template_id=tpl.id) }}">
+                            <img class="card-img-top"
+                                 {% set thumb_path = 'thumbnail_' + tpl.id|string + '.png' %}
+                                 src="{{ url_for('static', path=thumb_path) }}"
+                                 alt="Template thumbnail">
+                        </a>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ tpl.title }}</h5>
+                            <p class="card-text">{{ tpl.description }}</p>
+                            <div clas="row">
+                                <a href="{{ url_for('view_template_by_id',template_id=tpl.id) }}"
+                                   class="btn btn-primary">Открыть</a>
+                                {% if user and tpl.is_favorited %}<i class="bi bi-heart-fill"></i>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock content %}
+{% block scripts %}
+{% endblock scripts %}

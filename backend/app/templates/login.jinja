@@ -1,0 +1,31 @@
+{% extends "base.jinja" %}
+{% block title %}
+    Авторизация
+{% endblock title %}
+{% block content %}
+    <div>
+        <form method="post" action="/api/v1/auth/login">
+            <div class="form-group">
+                <label for="username">Email адрес</label>
+                <input type="email"
+                       class="form-control"
+                       id="username"
+                       name="username"
+                       aria-describedby="emailHelp"
+                       required>
+                <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+            </div>
+            <div class="form-group">
+                <label for="password">Пароль</label>
+                <input type="password"
+                       class="form-control"
+                       id="password"
+                       name="password"
+                       required>
+            </div>
+            <button type="submit" class="btn btn-primary">Вход</button>
+        </form>
+    </div>
+{% endblock content %}
+{% block scripts %}
+{% endblock scripts %}

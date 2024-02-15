@@ -1,0 +1,88 @@
+name: templdoc
+version: '3.7'
+
+volumes:
+  postgresdata:
+  storage_docx:
+  storage_thumbnails:
+
+services:
+  db:
+    image: postgres:15
+    container_name: templdoc_db
+    volumes:
+      - postgresdata:/var/lib/postgresql/data
+    env_file: .env-prod
+    ports:
+      - 5432:5432
+    restart: always
+    healthcheck:  
+      # test: [ "CMD", "pg_isready", "-q", "-d", "$$POSTGRES_DB", "-U", "$$POSTGRES_USER" ]
+      test: ["CMD-SHELL", "-c", "pg_isready -q -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    container_name: templdoc_redis
+
+  templdoc:
+    image: templdoc_image
+    build: 
+      context: .
+    env_file: .env-prod
+    container_name: templdoc_app
+    volumes:
+      - storage_docx:/docx_storage/tpl_docx/
+      - storage_thumbnails:/docx_storage/tpl_thumbnails/
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    command: ["/templdoc/startup_scripts/app.sh"]
+    # command: sh -c "alembic upgrade head && gunicorn app.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind=0.0.0.0:8000"
+
+  celery:
+    image: templdoc_image:latest
+    container_name: templdoc_celery
+    command: ["/templdoc/startup_scripts/celery.sh", "celery"]
+    # command: sh -c "celery --app=app.tasks.celery_config:celery_app worker -l INFO"
+    env_file:
+      - .env-prod
+    depends_on:
+      - redis
+      - templdoc
+    restart: always
+    volumes:
+      - storage_docx:/docx_storage/tpl_docx/
+      - storage_thumbnails:/docx_storage/tpl_thumbnails/
+
+  flower:
+    image: templdoc_image:latest
+    container_name: templdoc_flower
+    command: ["/templdoc/startup_scripts/celery.sh", "flower"]
+    # command: sh -c "celery --app=app.tasks.celery_config:celery_app flower"
+    env_file:
+      - .env-prod
+    depends_on:
+      - redis
+      - templdoc
+    volumes:
+      - storage_docx:/docx_storage/tpl_docx/
+      - storage_thumbnails:/docx_storage/tpl_thumbnails/
+
+  gateway:
+    build: ./gateway/
+    container_name: templdoc_gateway
+    env_file: .env-prod
+    ports:
+      - 80:80
+      - 443:443
+    links:
+      - templdoc
+    volumes:
+      - storage_docx:/storage_docx/
+      - storage_thumbnails:/staticfiles/tpl_thumbnails/
+
