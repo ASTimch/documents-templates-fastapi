@@ -100,11 +100,11 @@ class DocumentDAO(BaseDAO):
     model = Document
 
     @classmethod
-    async def get_by_id(cls, model_id: int) -> Optional[Document]:
+    async def get_by_id(cls, id: pk_type) -> Optional[Document]:
         """Получить документ с заданным идентификатором.
 
         Args:
-            id (pk_type): идентификатор запрашиваемого документа.
+            id: идентификатор запрашиваемого документа.
 
         Returns:
             Document | None: документ с заданным id.
@@ -112,7 +112,7 @@ class DocumentDAO(BaseDAO):
         async with async_session_maker() as session:
             query = (
                 select(cls.model)
-                .filter_by(id=model_id)
+                .filter_by(id=id)
                 .options(
                     joinedload(Document.template)
                     .options(
