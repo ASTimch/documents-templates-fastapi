@@ -34,8 +34,7 @@ async def get_all_templates(
     user: Optional[User] = Depends(current_user_or_none),
 ) -> Optional[list[TemplateReadMinifiedDTO]]:
     print("favorited: ", favorited)
-    templates = await TemplateService.get_all(user=user, favorited=favorited)
-    return templates
+    return await TemplateService.get_all(user=user, favorited=favorited)
 
 
 @router.get("/{template_id}", summary="Получить шаблон с заданным template_id")
@@ -43,8 +42,7 @@ async def get_template_by_id(
     template_id: int,
     user: Optional[User] = Depends(current_user_or_none),
 ) -> Optional[TemplateReadDTO]:
-    template = await TemplateService.get(id=template_id, user=user)
-    return template
+    return await TemplateService.get(id=template_id, user=user)
 
 
 # @router.put("/{template_id}", summary="Обновить шаблон")
@@ -77,8 +75,7 @@ async def add_template(
     data: TemplateWriteDTO, user: User = Depends(current_superuser)
 ) -> Optional[TemplateReadDTO]:
     template_id = await TemplateService.add(data)
-    template_dao = await TemplateService.get(id=template_id)
-    return template_dao
+    return await TemplateService.get(id=template_id)
 
 
 @router.delete(
@@ -111,8 +108,7 @@ async def check_consistency(
 )
 async def download_draft(template_id: int, pdf: bool = False) -> FileResponse:
     file, filename = await TemplateService.get_draft(template_id, pdf)
-    response = await get_file_response(file, filename, pdf)
-    return response
+    return await get_file_response(file, filename, pdf)
 
 
 @router.get(
@@ -128,8 +124,7 @@ async def get_thumbnail(template_id: int) -> FileResponse:
         settings.THUMBNAIL_HEIGHT,
         settings.THUMBNAIL_FORMAT,
     )
-    response = Response(content=png_buffer.getvalue(), media_type="image/png")
-    return response
+    return Response(content=png_buffer.getvalue(), media_type="image/png")
 
 
 @router.get(
@@ -156,8 +151,7 @@ async def download_preview(
         field_values.model_dump()["fields"],
         pdf,
     )
-    response = await get_file_response(file, filename, pdf)
-    return response
+    return await get_file_response(file, filename, pdf)
 
 
 @router.post(

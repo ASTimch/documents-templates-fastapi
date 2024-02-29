@@ -39,11 +39,11 @@ async def prepare_database():
     users = open_mock_json("user")
 
     async with async_session_maker() as session:
-        for Model, values, table_name, init_id in [
+        for model, values, table_name, init_id in [
             (TemplateFieldType, template_field_types, "field_type", True),
             (User, users, "user", False),
         ]:
-            query = insert(Model).values(values)
+            query = insert(model).values(values)
             await session.execute(query)
             if init_id:
                 await session.execute(

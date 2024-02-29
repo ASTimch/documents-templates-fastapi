@@ -103,10 +103,7 @@ class TemplateFieldTypeService:
                     detail=Messages.TYPE_FIELD_ALREADY_EXISTS.format(obj.type)
                 )
             obj_dict_list.append(obj.model_dump())
-        created_sequence = await TemplateFieldTypeDAO.create_list(
-            obj_dict_list
-        )
-        return created_sequence
+        return await TemplateFieldTypeDAO.create_list(obj_dict_list)
 
     @classmethod
     async def update(
@@ -137,8 +134,7 @@ class TemplateFieldTypeService:
             raise TypeFieldAlreadyExistsException(
                 detail=Messages.TYPE_FIELD_ALREADY_EXISTS.format(dto.type)
             )
-        obj_by_id = await TemplateFieldTypeDAO.update_(id, **dto.model_dump())
-        return obj_by_id
+        return await TemplateFieldTypeDAO.update_(id, **dto.model_dump())
 
     @classmethod
     async def delete(cls, id: pk_type):

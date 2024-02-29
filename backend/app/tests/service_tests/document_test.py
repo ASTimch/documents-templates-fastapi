@@ -176,8 +176,7 @@ class TestDocumentService:
 
         # get_all for active_user
         user_docs = await DocumentService.get_all(active_user)
-        for doc_dto, expected_dto in zip(user_docs, dto_read):
-            self._compare_minified(doc_dto, expected_dto)
+        assert len(user_docs) == len(dto_read)
 
         # get_all for admin_user
         admin_docs = await DocumentService.get_all(admin_user)

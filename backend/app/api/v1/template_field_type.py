@@ -18,16 +18,14 @@ router = APIRouter()
 async def get_all_template_field_types() -> (
     Optional[list[TemplateFieldTypeReadDTO]]
 ):
-    template_field_types = await TemplateFieldTypeService.get_all()
-    return template_field_types
+    return await TemplateFieldTypeService.get_all()
 
 
 @router.get("/{id}", summary="Получить тип поля с заданным id")
 async def get_template_field_type_by_id(
     id: idpk,
 ) -> Optional[TemplateFieldTypeReadDTO]:
-    template_field_type = await TemplateFieldTypeService.get(id=id)
-    return template_field_type
+    return await TemplateFieldTypeService.get(id=id)
 
 
 @router.put("/{id}", summary="Обновить тип с заданным id")
@@ -36,8 +34,7 @@ async def update_template_field_type(
     data: TemplateFieldTypeWriteDTO,
     user: User = Depends(current_superuser),
 ) -> Optional[TemplateFieldTypeReadDTO]:
-    template_field_type = await TemplateFieldTypeService.update(id, data)
-    return template_field_type
+    return await TemplateFieldTypeService.update(id, data)
 
 
 @router.post(
@@ -48,8 +45,7 @@ async def update_template_field_type(
 async def add_template_field_type(
     data: TemplateFieldTypeWriteDTO, user: User = Depends(current_superuser)
 ) -> Optional[TemplateFieldTypeReadDTO]:
-    field_type = await TemplateFieldTypeService.add(data)
-    return field_type
+    return await TemplateFieldTypeService.add(data)
 
 
 @router.post(
@@ -61,8 +57,7 @@ async def add_template_field_type_list(
     data: list[TemplateFieldTypeWriteDTO],
     user: User = Depends(current_superuser),
 ) -> Optional[list[TemplateFieldTypeReadDTO]]:
-    field_types = await TemplateFieldTypeService.add_list(data)
-    return field_types
+    return await TemplateFieldTypeService.add_list(data)
 
 
 @router.delete(
