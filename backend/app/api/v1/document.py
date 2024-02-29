@@ -46,8 +46,7 @@ async def add_document(
     data: DocumentWriteDTO, user: User = Depends(current_active_user)
 ) -> Optional[DocumentReadDTO]:
     document_id = await DocumentService.add(data, user)
-    document_dao = await DocumentService.get(id=document_id, user=user)
-    return document_dao
+    return await DocumentService.get(id=document_id, user=user)
 
 
 @router.delete(

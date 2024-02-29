@@ -23,7 +23,7 @@ class TemplateFavoriteService:
         )
         if obj_db:
             raise UserTemplateFavoriteAlreadyExistsException()
-        await UserTemplateFavoriteDAO.create(
+        return await UserTemplateFavoriteDAO.create(
             user_id=user_id, template_id=template_id
         )
 
